@@ -13,7 +13,7 @@ async function startCrawler() {
   const crawler = new PlaywrightCrawler({
     launchContext: {
       launchOptions: {
-        headless: false,
+        headless: headless,
       },
     },
     requestHandler: async ({ request, page, log, enqueueLinks }) => {

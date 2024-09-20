@@ -20,9 +20,13 @@ async function runAllScrapers() {
         .filter((file) => file.endsWith(".js"));
 
       for (const file of files) {
-        const { startCrawler } = require(path.join(rootDir, city, file));
-        console.log(`Running scraper: ${file} for city: ${city}`);
-        await startCrawler();
+        try {
+          const { startCrawler } = require(path.join(rootDir, city, file));
+          console.log(`Running scraper: ${file} for city: ${city}`);
+          await startCrawler();
+        } catch (error) {
+          console.error(`Error running scraper for ${file} in ${city}:`, error);
+        }
       }
     }
   } catch (error) {
