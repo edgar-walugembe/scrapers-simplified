@@ -12,9 +12,7 @@ dotenv.config();
 async function startCrawler() {
   const crawler = new PlaywrightCrawler({
     launchContext: {
-      launchOptions: {
-        headless: headless,
-      },
+      launchOptions: { headless: true },
     },
     requestHandler: async ({ request, page, log, enqueueLinks }) => {
       console.log(`Processing: ${request.url}`);
