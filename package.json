@@ -4,7 +4,7 @@
   "description": "This is web scraper for scrapping websites that contain javascript rendered pages.\r It scraps the some details about the products listed on the website and stores the collected results in the datasets folder in json format.\r It is also hosted on apify",
   "main": "index.js",
   "scripts": {
-    "start": "npx playwright install && node index.js",
+    "start": "node index.js",
     "test": "echo \"Error: oops, the actor has no tests yet, sad!\" && exit 1",
     "postinstall": "npx crawlee install-playwright-browsers"
   },
