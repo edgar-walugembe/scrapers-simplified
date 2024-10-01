@@ -1,12 +1,6 @@
-// import { PlaywrightCrawler, log } from "crawlee";
-// import { v4 as uuidv4 } from "uuid";
-// import dotenv from "dotenv";
-const { PlaywrightCrawler, log } = require("crawlee");
+const playwright = require("playwright");
 const { v4: uuidv4 } = require("uuid");
 const dotenv = require("dotenv");
-
-log.setLevel(log.LEVELS.DEBUG);
-log.debug("Setting up crawler.");
 dotenv.config();
 
 async function startCrawler() {
@@ -20,7 +14,7 @@ async function startCrawler() {
       console.log(`Processing: ${request.url}`);
       if (request.label === "DETAIL") {
         //when in the car details page
-        log.debug(`Extracting data: ${request.url}`);
+        console.log(`Extracting data: ${request.url}`);
 
         const urlPath = new URL(request.url).pathname;
         const carRegex = /\/vehicle\/(\d{4})-(\w+)-(\w+)-/;
@@ -110,11 +104,11 @@ async function startCrawler() {
           VIN,
         };
 
-        log.debug(`Saving data: ${request.url}`);
+        console.log(`Saving data: ${request.url}`);
         console.log(carDetails);
       } else if (request.label === "CATEGORY") {
         //when in the car listing page
-        log.debug(`Enqueueing pagination for: ${request.url}`);
+        console.log(`Enqueueing pagination for: ${request.url}`);
 
         const carSelector = ".item.active > a";
         await page.waitForSelector(carSelector);
@@ -124,7 +118,7 @@ async function startCrawler() {
         });
       } else {
         //when on the website's home page
-        log.debug(`Enqueueing categories from page: ${request.url}`);
+        console.log(`Enqueueing categories from page: ${request.url}`);
 
         const newCarSelector = ".menu-item-2308 > a";
         await page.waitForSelector(newCarSelector);

@@ -1,22 +1,17 @@
 {
-  "name": "city_scrapers",
+  "name": "scraper_simplified",
   "version": "1.0.0",
-  "description": "This is web scraper for scrapping websites that contain javascript rendered pages.\r It scraps the some details about the products listed on the website and stores the collected results in the datasets folder in json format.\r It is also hosted on apify",
+  "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
-    "test": "echo \"Error: oops, the actor has no tests yet, sad!\" && exit 1",
-    "postinstall": "npx crawlee install-playwright-browsers"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
   },
+  "author": "",
+  "license": "ISC",
   "dependencies": {
-    "axios": "^1.7.2",
-    "crawlee": "^3.11.3",
     "dotenv": "^16.4.5",
-    "fs": "^0.0.1-security",
-    "path": "^0.12.7",
-    "playwright": "^1.47.1",
+    "playwright": "^1.47.2",
     "uuid": "^10.0.0"
-  },
-  "author": "It's not you it's me",
-  "license": "ISC"
+  }
 }

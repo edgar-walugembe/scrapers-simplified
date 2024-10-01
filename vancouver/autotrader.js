@@ -1,12 +1,6 @@
-// import { PlaywrightCrawler, log } from "crawlee";
-// import { v4 as uuidv4 } from "uuid";
-// import dotenv from "dotenv";
-const { PlaywrightCrawler, log } = require("crawlee");
+const playwright = require("playwright");
 const { v4: uuidv4 } = require("uuid");
 const dotenv = require("dotenv");
-
-log.setLevel(log.LEVELS.DEBUG);
-log.debug("Setting up crawler.");
 dotenv.config();
 
 async function startCrawler() {
@@ -18,7 +12,7 @@ async function startCrawler() {
       console.log(`Processing: ${request.url}`);
       if (request.label === "DETAIL") {
         //when in the car details page
-        log.debug(`Extracting data: ${request.url}`);
+        console.log(`Extracting data: ${request.url}`);
 
         const urlParts = request.url.split("/");
         const Make = urlParts[4] || "Not Available";
@@ -149,11 +143,11 @@ async function startCrawler() {
           Description,
         };
 
-        log.debug(`Saving data: ${request.url}`);
+        console.log(`Saving data: ${request.url}`);
         console.log(carDetails);
       } else {
         //when on the website's page
-        log.debug(`Enqueueing car listings for: ${request.url}`);
+        console.log(`Enqueueing car listings for: ${request.url}`);
 
         const productSelector = ".dealer-split-wrapper > a";
         await page.waitForSelector(productSelector);
