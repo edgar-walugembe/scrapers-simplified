@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "./render-build.sh && npm install",
     "start": "npx playwright install && node index.js"
   },
   "author": "",
