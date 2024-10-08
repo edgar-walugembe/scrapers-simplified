@@ -127,7 +127,7 @@ async function sendScrapedCarsToAPI(cars) {
 
 async function startCrawler() {
   const browser = await playwright.chromium.launch({
-    headless: true,
+    headless: false,
   });
 
   const page = await browser.newPage();
