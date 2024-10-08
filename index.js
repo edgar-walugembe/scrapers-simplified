@@ -6,9 +6,14 @@ const rootDir = __dirname;
 
 async function runAllScrapers() {
   try {
+    const excludedFolders = ["node_modules", ".git", ".vscode"];
+
     const cityFolders = fs.readdirSync(rootDir).filter((folder) => {
       const folderPath = path.join(rootDir, folder);
-      return fs.statSync(folderPath).isDirectory();
+      return (
+        fs.statSync(folderPath).isDirectory() &&
+        !excludedFolders.includes(folder)
+      );
     });
 
     for (const city of cityFolders) {
