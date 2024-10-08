@@ -1,6 +1,8 @@
 const playwright = require("playwright");
 const { v4: uuidv4 } = require("uuid");
 const axios = require("axios");
+const dotenv = require("dotenv");
+dotenv.config();
 
 function getMainBodyType(bodyType) {
   const bodyTypes = {
@@ -108,16 +110,14 @@ function chunkArray(array, size) {
 
 async function sendScrapedCarsToAPI(cars) {
   const chunkSize = 10;
+  const url = " https://scraper-db-api.onrender.com/cars/new-cars";
   const carChunks = chunkArray(cars, chunkSize);
 
   for (const chunk of carChunks) {
     try {
-      const response = await axios.post(
-        "https://scraper-db-api.onrender.com/cars/new-cars",
-        {
-          cars: chunk,
-        }
-      );
+      const response = await axios.post(url, {
+        cars: chunk,
+      });
       console.log("Cars successfully added:", response.data);
     } catch (error) {
       console.error("Error adding cars:", error);
@@ -185,9 +185,11 @@ async function startCrawler() {
         imgs.map((img) => img.src)
       );
 
-      const BodyType = (await page.isVisible("td[itemprop='bodyType']"))
+      let BodyType = (await page.isVisible("td[itemprop='bodyType']"))
         ? await page.locator("td[itemprop='bodyType']").textContent()
         : "Not Available";
+
+      BodyType = getMainBodyType(BodyType);
 
       const Engine = (await page.isVisible("td[itemprop='vehicleEngine']"))
         ? await page.locator("td[itemprop='vehicleEngine']").textContent()
@@ -265,8 +267,6 @@ async function startCrawler() {
   await browser.close();
 }
 
-startCrawler();
-
-// module.exports = {
-//   startCrawler,
-// };
+module.exports = {
+  startCrawler,
+};
