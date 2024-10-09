@@ -21,9 +21,11 @@ function getMainBodyType(bodyType) {
       "off-road suv",
       "luxury suv",
       "subcompact suv",
+      ,
     ],
     coupe: [
       "coupe",
+      "sport utility",
       "sports-utility",
       "sports coupe",
       "grand tourer",
@@ -310,6 +312,8 @@ async function startCrawler() {
   await browser.close();
 }
 
-module.exports = {
-  startCrawler,
-};
+startCrawler();
+
+// module.exports = {
+//   startCrawler,
+// };

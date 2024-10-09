@@ -111,7 +111,7 @@ function chunkArray(array, size) {
 
 async function sendScrapedCarsToAPI(cars) {
   const chunkSize = 10;
-  const url = " https://scraper-db-api.onrender.com/cars/new-cars";
+  const url = "https://scraper-db-api.onrender.com/cars/new-cars";
   const carChunks = chunkArray(cars, chunkSize);
 
   for (const chunk of carChunks) {
@@ -152,22 +152,37 @@ async function startCrawler() {
 
   const page = await browser.newPage();
 
-  await page.goto(`https://www.maseratiofalberta.com/`, {
-    waitUntil: "domcontentloaded",
-    timeout: 120000,
-  });
+  await page.goto(
+    `https://www.cartersubaruballard.com/search/new-subaru-seattle-wa/?s:df=1&ct=60&cy=98107&tp=new`,
+    {
+      waitUntil: "domcontentloaded",
+      timeout: 120000,
+    }
+  );
 
-  const newCarSelector = await page.isVisible(".menu-item-2308 > a");
-  if (newCarSelector) {
-    console.log("New car link selected...");
-    await page.click(".menu-item-2308 > a");
+  await page.waitForSelector("select.results_per_page_controls__select");
+  await page.selectOption("select.results_per_page_controls__select", "All");
+  await page.waitForTimeout(10000);
+
+  const isSurveyFormVisible = await page.isVisible("button#ip-close");
+  if (isSurveyFormVisible) {
+    await page.click("button#ip-close");
+    await page.waitForTimeout(3000);
   }
-  await page.waitForTimeout(120000);
+
+  const isPopupVisible = await page.isVisible(
+    "a.ui-dialog-titlebar-close.ui-corner-all"
+  );
+  if (isPopupVisible) {
+    await page.click("a.ui-dialog-titlebar-close.ui-corner-all");
+    await page.waitForTimeout(3000);
+  }
 
   let carCounter = 0;
 
   let previousHeight = await page.evaluate("document.body.scrollHeight");
   let reachedEnd = false;
+
   while (!reachedEnd) {
     await autoScroll(page);
     await page.waitForTimeout(2000);
@@ -180,12 +195,10 @@ async function startCrawler() {
     previousHeight = newHeight;
   }
 
-  const productSelector = ".item.active > a";
-  await page.waitForTimeout(10000);
+  const productSelector = ".loopslider > a";
   const carLinks = await page.$$eval(productSelector, (links) =>
     links.map((link) => link.href)
   );
-
   console.log(`Found ${carLinks.length} car links`);
   for (const carLink of carLinks) {
     carCounter++;
@@ -196,97 +209,11 @@ async function startCrawler() {
     });
 
     try {
-      const urlPath = new URL(carLink).pathname;
-      const carRegex = /\/vehicle\/(\d{4})-(\w+)-(\w+)-/;
-      const carMatch = urlPath.match(carRegex);
-      const Make = carMatch ? carMatch[2] : "Make Not Found";
-      const Model = carMatch ? carMatch[3] : "Model Not Found";
-      const Year = carMatch ? carMatch[1] : "Year Not Found";
+      const urlParts = carLink.split("/");
 
-      const Location = "Calgary";
-
-      const price = (await page.isVisible("span#final-price"))
-        ? await page.locator("span#final-price").textContent()
-        : "Not Available";
-      const Price = `$${price}`;
-
-      const CoverImage =
-        (await page.locator("img[itemprop='image']").getAttribute("src")) ||
-        "Not Available";
-
-      await page.waitForSelector(".thumb img");
-      const otherCarImages = await page.$$eval(".thumb img", (imgs) =>
-        imgs.map((img) => img.src)
-      );
-
-      let BodyType = (await page.isVisible("td[itemprop='bodyType']"))
-        ? await page.locator("td[itemprop='bodyType']").textContent()
-        : "Not Available";
-
-      BodyType = getMainBodyType(BodyType);
-
-      const Engine = (await page.isVisible("td[itemprop='vehicleEngine']"))
-        ? await page.locator("td[itemprop='vehicleEngine']").textContent()
-        : "Not Available";
-
-      const Trim = (await page.isVisible("[itemprop='model'] span"))
-        ? await page.locator("[itemprop='model'] span").textContent()
-        : "Not Available";
-
-      const ExteriorColor = (await page.isVisible("td[itemprop='color']"))
-        ? await page.locator("td[itemprop='color']").textContent()
-        : "Not Available";
-
-      const InteriorColor = (await page.isVisible(
-        "td[itemprop='vehicleInteriorColor']"
-      ))
-        ? await page
-            .locator("td[itemprop='vehicleInteriorColor']")
-            .textContent()
-        : "Not Available";
-
-      const Drivetrain = (await page.isVisible(
-        "div:nth-of-type(3) tr:nth-of-type(3) td.td-odd"
-      ))
-        ? await page
-            .locator("div:nth-of-type(3) tr:nth-of-type(3) td.td-odd")
-            .textContent()
-        : "Not Available";
-
-      const FuelType = (await page.isVisible("td[itemprop='fuelType']"))
-        ? await page.locator("td[itemprop='fuelType']").textContent()
-        : "Not Available";
-
-      const Transmission = (await page.isVisible(
-        "td[itemprop='vehicleTransmission']"
-      ))
-        ? await page.locator("td[itemprop='vehicleTransmission']").textContent()
-        : "Not Available";
-
-      const Stock_Number = (await page.isVisible("td[itemprop='sku']"))
-        ? await page.locator("td[itemprop='sku']").textContent()
-        : "Not Available";
-
-      const carDetails = {
-        car_url: carLink,
-        car_id: uuidv4(),
-        Location,
-        Make: Make.toLowerCase(),
-        Model: Model.toLowerCase(),
-        Trim,
-        BodyType: BodyType.toLowerCase(),
-        Year,
-        Price,
-        ExteriorColor,
-        InteriorColor,
-        Transmission,
-        Drivetrain,
-        FuelType,
-        CoverImage,
-        otherCarImages,
-        Engine,
-        Stock_Number,
-      };
+      const Year = urlParts[4];
+      const Make = urlParts[5].toLowerCase();
+      const Model = urlParts[6].toLowerCase();
 
       console.log(`Car_Number: #${carCounter}`);
       cars.push(carDetails);
@@ -306,3 +233,6 @@ startCrawler();
 // module.exports = {
 //   startCrawler,
 // };
+
+//pop-up class
+// ui - dialog - titlebar - close;

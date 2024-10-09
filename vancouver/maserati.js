@@ -24,6 +24,7 @@ function getMainBodyType(bodyType) {
     ],
     coupe: [
       "coupe",
+      "sport utility",
       "sports-utility",
       "sports coupe",
       "grand tourer",

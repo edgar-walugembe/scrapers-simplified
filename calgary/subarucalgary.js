@@ -111,7 +111,7 @@ function chunkArray(array, size) {
 
 async function sendScrapedCarsToAPI(cars) {
   const chunkSize = 10;
-  const url = " https://scraper-db-api.onrender.com/cars/new-cars";
+  const url = "https://scraper-db-api.onrender.com/cars/new-cars";
   const carChunks = chunkArray(cars, chunkSize);
 
   for (const chunk of carChunks) {
@@ -152,22 +152,19 @@ async function startCrawler() {
 
   const page = await browser.newPage();
 
-  await page.goto(`https://www.maseratiofalberta.com/`, {
-    waitUntil: "domcontentloaded",
-    timeout: 120000,
-  });
-
-  const newCarSelector = await page.isVisible(".menu-item-2308 > a");
-  if (newCarSelector) {
-    console.log("New car link selected...");
-    await page.click(".menu-item-2308 > a");
-  }
-  await page.waitForTimeout(120000);
+  await page.goto(
+    `https://www.subarucalgary.com/vehicles/new/?st=year,desc&view=grid&sc=new`,
+    {
+      waitUntil: "domcontentloaded",
+      timeout: 120000,
+    }
+  );
 
   let carCounter = 0;
 
   let previousHeight = await page.evaluate("document.body.scrollHeight");
   let reachedEnd = false;
+
   while (!reachedEnd) {
     await autoScroll(page);
     await page.waitForTimeout(2000);
@@ -180,8 +177,7 @@ async function startCrawler() {
     previousHeight = newHeight;
   }
 
-  const productSelector = ".item.active > a";
-  await page.waitForTimeout(10000);
+  const productSelector = "a.vehicle-card__cta";
   const carLinks = await page.$$eval(productSelector, (links) =>
     links.map((link) => link.href)
   );
@@ -196,76 +192,121 @@ async function startCrawler() {
     });
 
     try {
-      const urlPath = new URL(carLink).pathname;
-      const carRegex = /\/vehicle\/(\d{4})-(\w+)-(\w+)-/;
-      const carMatch = urlPath.match(carRegex);
-      const Make = carMatch ? carMatch[2] : "Make Not Found";
-      const Model = carMatch ? carMatch[3] : "Model Not Found";
-      const Year = carMatch ? carMatch[1] : "Year Not Found";
+      const urlParts = carLink.split("/");
+      const Year = urlParts[4];
+      const Make = urlParts[5];
+      const Model = urlParts[6];
 
       const Location = "Calgary";
 
-      const price = (await page.isVisible("span#final-price"))
-        ? await page.locator("span#final-price").textContent()
+      const Trim = (await page.isVisible("a.vdp-breadcrumbs__disabled"))
+        ? await page.locator("a.vdp-breadcrumbs__disabled").textContent()
         : "Not Available";
-      const Price = `$${price}`;
 
       const CoverImage =
-        (await page.locator("img[itemprop='image']").getAttribute("src")) ||
-        "Not Available";
+        (await page
+          .locator("div.photo-gallery__main > img")
+          .getAttribute("src")) || "Not Available";
 
-      await page.waitForSelector(".thumb img");
-      const otherCarImages = await page.$$eval(".thumb img", (imgs) =>
-        imgs.map((img) => img.src)
+      const isZoomIconVisible = await page.isVisible(
+        "i.photo-gallery__zoom-icon"
       );
+      let otherCarImages = [];
+      if (isZoomIconVisible) {
+        try {
+          await page.click("i.photo-gallery__zoom-icon");
+          await page.waitForTimeout(3000);
+          if (await page.isVisible("img.vgs__gallery__container__img")) {
+            await page.waitForSelector("img.vgs__gallery__container__img");
+            otherCarImages = await page.$$eval(
+              "img.vgs__gallery__container__img",
+              (imgs) => imgs.map((img) => img.src)
+            );
+          }
+        } catch (error) {
+          console.log("Error fetching additional images:", error);
+        }
+      } else {
+        console.log(`Zoom Icon absent for car at: ${carLink}`);
+      }
 
-      let BodyType = (await page.isVisible("td[itemprop='bodyType']"))
-        ? await page.locator("td[itemprop='bodyType']").textContent()
+      // await page.click("img#mainPhoto.loaded");
+      // await page.waitForSelector(".gallery-thumbnail img");
+      // const otherCarImages = await page.$$eval(
+      //   ".gallery-thumbnail img",
+      //   (imgs) => imgs.map((img) => img.src)
+      // );
+
+      const Mileage = (await page.isVisible(
+        "[data-spec='odometer'] span.detailed-specs__value"
+      ))
+        ? await page
+            .locator("[data-spec='odometer'] span.detailed-specs__value")
+            .textContent()
         : "Not Available";
 
-      BodyType = getMainBodyType(BodyType);
-
-      const Engine = (await page.isVisible("td[itemprop='vehicleEngine']"))
-        ? await page.locator("td[itemprop='vehicleEngine']").textContent()
-        : "Not Available";
-
-      const Trim = (await page.isVisible("[itemprop='model'] span"))
-        ? await page.locator("[itemprop='model'] span").textContent()
-        : "Not Available";
-
-      const ExteriorColor = (await page.isVisible("td[itemprop='color']"))
-        ? await page.locator("td[itemprop='color']").textContent()
+      const ExteriorColor = (await page.isVisible(
+        "[data-spec='exterior_color'] span.detailed-specs__value"
+      ))
+        ? await page
+            .locator("[data-spec='exterior_color'] span.detailed-specs__value")
+            .textContent()
         : "Not Available";
 
       const InteriorColor = (await page.isVisible(
-        "td[itemprop='vehicleInteriorColor']"
+        "[data-spec='interior_color'] span.detailed-specs__value"
       ))
         ? await page
-            .locator("td[itemprop='vehicleInteriorColor']")
+            .locator("[data-spec='interior_color'] span.detailed-specs__value")
+            .textContent()
+        : "Not Available";
+
+      const Engine = (await page.isVisible(
+        "[data-spec='engine'] span.detailed-specs__value"
+      ))
+        ? await page
+            .locator("[data-spec='engine'] span.detailed-specs__value")
+            .textContent()
+        : "Not Available";
+
+      const Transmission = (await page.isVisible(
+        "[data-spec='transmission'] span.detailed-specs__value"
+      ))
+        ? await page
+            .locator("[data-spec='transmission'] span.detailed-specs__value")
             .textContent()
         : "Not Available";
 
       const Drivetrain = (await page.isVisible(
-        "div:nth-of-type(3) tr:nth-of-type(3) td.td-odd"
+        "[data-spec='drive_train'] span.detailed-specs__value"
       ))
         ? await page
-            .locator("div:nth-of-type(3) tr:nth-of-type(3) td.td-odd")
+            .locator("[data-spec='drive_train'] span.detailed-specs__value")
             .textContent()
         : "Not Available";
 
-      const FuelType = (await page.isVisible("td[itemprop='fuelType']"))
-        ? await page.locator("td[itemprop='fuelType']").textContent()
-        : "Not Available";
-
-      const Transmission = (await page.isVisible(
-        "td[itemprop='vehicleTransmission']"
+      const VIN = (await page.isVisible(
+        "[data-spec='vin'] span.detailed-specs__value"
       ))
-        ? await page.locator("td[itemprop='vehicleTransmission']").textContent()
+        ? await page
+            .locator("[data-spec='vin'] span.detailed-specs__value")
+            .textContent()
         : "Not Available";
 
-      const Stock_Number = (await page.isVisible("td[itemprop='sku']"))
-        ? await page.locator("td[itemprop='sku']").textContent()
+      const Stock_Number = (await page.isVisible(
+        "[data-spec='stock_number'] span.detailed-specs__value"
+      ))
+        ? await page
+            .locator("[data-spec='stock_number'] span.detailed-specs__value")
+            .textContent()
         : "Not Available";
+
+      const Description = (await page.isVisible(
+        "p.description-tab__description"
+      ))
+        ? await page.locator("p.description-tab__description").textContent()
+        : "Not Available";
+      // add content here
 
       const carDetails = {
         car_url: carLink,
@@ -273,19 +314,19 @@ async function startCrawler() {
         Location,
         Make: Make.toLowerCase(),
         Model: Model.toLowerCase(),
-        Trim,
-        BodyType: BodyType.toLowerCase(),
+        Trim: Trim.toLowerCase(),
+        Mileage,
         Year,
-        Price,
         ExteriorColor,
         InteriorColor,
         Transmission,
         Drivetrain,
-        FuelType,
         CoverImage,
         otherCarImages,
         Engine,
         Stock_Number,
+        VIN,
+        Description,
       };
 
       console.log(`Car_Number: #${carCounter}`);
