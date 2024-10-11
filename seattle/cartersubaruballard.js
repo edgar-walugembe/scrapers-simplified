@@ -162,10 +162,6 @@ async function startCrawler() {
     }
   );
 
-  await page.isVisible('input[type="checkbox"]');
-  await page.click("input[type='checkbox']");
-  await page.waitForTimeout(3000);
-
   await page.waitForSelector("select.results_per_page_controls__select");
   await page.selectOption("select.results_per_page_controls__select", "All");
   await page.waitForTimeout(10000);
