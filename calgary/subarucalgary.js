@@ -188,7 +188,7 @@ async function startCrawler() {
 
     await page.goto(carLink, {
       waitUntil: "domcontentloaded",
-      timeout: 60000,
+      timeout: 120000,
     });
 
     try {
@@ -206,7 +206,8 @@ async function startCrawler() {
       const CoverImage =
         (await page
           .locator("div.photo-gallery__main > img")
-          .getAttribute("src")) || "Not Available";
+          .getAttribute("src")) ||
+        "https://www.jpsubarunorthshore.com/wp-content/themes/convertus-achilles/achilles/assets/images/srp-placeholder/PV.jpg";
 
       const isZoomIconVisible = await page.isVisible(
         "i.photo-gallery__zoom-icon"
@@ -229,13 +230,6 @@ async function startCrawler() {
       } else {
         console.log(`Zoom Icon absent for car at: ${carLink}`);
       }
-
-      // await page.click("img#mainPhoto.loaded");
-      // await page.waitForSelector(".gallery-thumbnail img");
-      // const otherCarImages = await page.$$eval(
-      //   ".gallery-thumbnail img",
-      //   (imgs) => imgs.map((img) => img.src)
-      // );
 
       const Mileage = (await page.isVisible(
         "[data-spec='odometer'] span.detailed-specs__value"

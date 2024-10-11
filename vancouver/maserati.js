@@ -180,7 +180,7 @@ async function startCrawler() {
 
       const CoverImage =
         (await page.locator("img[itemprop='image']").getAttribute("src")) ||
-        "Not Available";
+        "https://www.jpsubarunorthshore.com/wp-content/themes/convertus-achilles/achilles/assets/images/srp-placeholder/PV.jpg";
 
       await page.waitForSelector(".thumb img");
       const otherCarImages = await page.$$eval(".thumb img", (imgs) =>

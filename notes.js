@@ -24,3 +24,6 @@ const carDetails = {
   Engine,
   Stock_Number,
 };
+
+//carImage url for car without images
+("https://www.jpsubarunorthshore.com/wp-content/themes/convertus-achilles/achilles/assets/images/srp-placeholder/PV.jpg");

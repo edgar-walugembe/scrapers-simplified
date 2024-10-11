@@ -150,7 +150,9 @@ async function startCrawler() {
     headless: false,
   });
 
-  const page = await browser.newPage();
+  const context = await browser.newContext();
+  const page = await context.newPage();
+  await page.route("**/geolocation/**", (route) => route.abort());
 
   await page.goto(
     `https://www.cartersubaruballard.com/search/new-subaru-seattle-wa/?s:df=1&ct=60&cy=98107&tp=new`,
@@ -160,15 +162,13 @@ async function startCrawler() {
     }
   );
 
+  await page.isVisible('input[type="checkbox"]');
+  await page.click("input[type='checkbox']");
+  await page.waitForTimeout(3000);
+
   await page.waitForSelector("select.results_per_page_controls__select");
   await page.selectOption("select.results_per_page_controls__select", "All");
   await page.waitForTimeout(10000);
-
-  const isSurveyFormVisible = await page.isVisible("button#ip-close");
-  if (isSurveyFormVisible) {
-    await page.click("button#ip-close");
-    await page.waitForTimeout(3000);
-  }
 
   const isPopupVisible = await page.isVisible(
     "a.ui-dialog-titlebar-close.ui-corner-all"
@@ -195,27 +195,208 @@ async function startCrawler() {
     previousHeight = newHeight;
   }
 
-  const productSelector = ".loopslider > a";
+  const isSurveyFormVisible = await page.isVisible("button#ip-no");
+  if (isSurveyFormVisible) {
+    await page.click("button#ip-no");
+    await page.waitForTimeout(3000);
+  }
+
+  const isAdFormVisible = await page.isVisible("div#closeXBtnImg.close-icon");
+  if (isAdFormVisible) {
+    await page.click("div#closeXBtnImg.close-icon");
+    await page.waitForTimeout(3000);
+  }
+
+  const productSelector = "a.loopslider__inner_container";
   const carLinks = await page.$$eval(productSelector, (links) =>
     links.map((link) => link.href)
   );
+
   console.log(`Found ${carLinks.length} car links`);
   for (const carLink of carLinks) {
     carCounter++;
 
     await page.goto(carLink, {
       waitUntil: "domcontentloaded",
-      timeout: 60000,
+      timeout: 120000,
+    });
+
+    await page.waitForSelector("div.features_snapshot__detail_node", {
+      timeout: 30000,
     });
 
     try {
-      const urlParts = carLink.split("/");
+      function extractCarDetails(url) {
+        const path = new URL(url).pathname;
+        const regex = /\/new-(\d+)-([a-z]+)-([a-z]+)-/i;
+        const match = path.match(regex);
 
-      const Year = urlParts[4];
-      const Make = urlParts[5].toLowerCase();
-      const Model = urlParts[6].toLowerCase();
+        if (match) {
+          const year = match[1];
+          const make = match[2];
+          const model = match[3];
+
+          return { year, make, model };
+        } else {
+          return null;
+        }
+      }
+      const { year, make, model } = extractCarDetails(carLink) || {};
+
+      const Year = year || "Year Not Found";
+      const Make = make || "Make Not Found";
+      const Model = model || "Model Not Found";
+
+      const Location = "Seattle";
+
+      const Price = (await page.isVisible("dt:nth-of-type(6) + dd"))
+        ? await page.locator("dt:nth-of-type(6) + dd").textContent()
+        : "Not Available";
+
+      const Mileage = (await page.isVisible(
+        "div.features_snapshot__detail_node:nth-of-type(1) div.features_snapshot__detail"
+      ))
+        ? await page
+            .locator(
+              "div.features_snapshot__detail_node:nth-of-type(1) div.features_snapshot__detail"
+            )
+            .textContent()
+        : "Not Available";
+
+      const Trim = (await page.isVisible(
+        "div.features_snapshot__detail_node:nth-of-type(2) div.features_snapshot__detail"
+      ))
+        ? await page
+            .locator(
+              "div.features_snapshot__detail_node:nth-of-type(2) div.features_snapshot__detail"
+            )
+            .textContent()
+        : "Not Available";
+
+      const ExteriorColor = (await page.isVisible(
+        "div.features_snapshot__detail_node:nth-of-type(5) div.features_snapshot__detail"
+      ))
+        ? await page
+            .locator(
+              "div.features_snapshot__detail_node:nth-of-type(5) div.features_snapshot__detail"
+            )
+            .textContent()
+        : "Not Available";
+
+      const InteriorColor = (await page.isVisible(
+        "div.features_snapshot__detail_node:nth-of-type(6) div.features_snapshot__detail"
+      ))
+        ? await page
+            .locator(
+              "div.features_snapshot__detail_node:nth-of-type(6) div.features_snapshot__detail"
+            )
+            .textContent()
+        : "Not Available";
+
+      const VIN = (await page.isVisible(
+        "div:nth-of-type(4) div.features_snapshot__detail"
+      ))
+        ? await page
+            .locator("div:nth-of-type(4) div.features_snapshot__detail")
+            .textContent()
+        : "Not Available";
+
+      const Stock_Number = (await page.isVisible(
+        "div.features_snapshot__detail_node:nth-of-type(3) div.features_snapshot__detail"
+      ))
+        ? await page
+            .locator(
+              "div.features_snapshot__detail_node:nth-of-type(3) div.features_snapshot__detail"
+            )
+            .textContent()
+        : "Not Available";
+
+      const Doors = (await page.isVisible(
+        "div:nth-of-type(7) div.features_snapshot__detail"
+      ))
+        ? await page
+            .locator("div:nth-of-type(7) div.features_snapshot__detail")
+            .textContent()
+        : "Not Available";
+
+      const Seats = (await page.isVisible(
+        "div:nth-of-type(8) div.features_snapshot__detail"
+      ))
+        ? await page
+            .locator("div:nth-of-type(8) div.features_snapshot__detail")
+            .textContent()
+        : "Not Available";
+
+      await page.click("div[data-accordion_label='SPECIFICATIONS']", {
+        timeout: 60000,
+      });
+
+      const Drivetrain = (await page.isVisible(
+        "div.two_column_list__item--last:nth-of-type(2) .two_column_list__definition span"
+      ))
+        ? await page
+            .locator(
+              "div.two_column_list__item--last:nth-of-type(2) .two_column_list__definition span"
+            )
+            .textContent()
+            .then((text) => text.trim())
+        : "Not Available";
+
+      const isImageIconVisible = await page.isVisible(
+        "div.vehicle_loopslider__gallery_controls"
+      );
+      let otherCarImages = [];
+      if (isImageIconVisible) {
+        try {
+          await page.click("div.vehicle_loopslider__gallery_controls");
+          await page.waitForTimeout(3000);
+          if (
+            await page.isVisible(
+              "div.view_all_images_wrapper:nth-of-type(n+2) > img"
+            )
+          ) {
+            await page.waitForSelector(
+              "div.view_all_images_wrapper:nth-of-type(n+2) > img"
+            );
+            otherCarImages = await page.$$eval(
+              "div.view_all_images_wrapper:nth-of-type(n+2) > img",
+              (imgs) => imgs.map((img) => img.src)
+            );
+          }
+        } catch (error) {
+          console.log("Error fetching additional images:", error);
+        }
+      } else {
+        console.log(`Zoom Icon absent for car at: ${carLink}`);
+      }
+
+      const CoverImage =
+        otherCarImages[0] ||
+        "https://www.jpsubarunorthshore.com/wp-content/themes/convertus-achilles/achilles/assets/images/srp-placeholder/PV.jpg";
+
+      const carDetails = {
+        car_url: carLink,
+        car_id: uuidv4(),
+        Location,
+        Make,
+        Model,
+        Trim: Trim.toLowerCase(),
+        Mileage,
+        Year: Year,
+        Price,
+        ExteriorColor,
+        InteriorColor,
+        Drivetrain,
+        CoverImage,
+        otherCarImages,
+        Stock_Number,
+        VIN,
+        Doors,
+        Seats,
+      };
 
       console.log(`Car_Number: #${carCounter}`);
+      console.log(carDetails);
       cars.push(carDetails);
     } catch (error) {
       console.error(`Error scraping car at ${carLink}:`, error);
@@ -233,6 +414,3 @@ startCrawler();
 // module.exports = {
 //   startCrawler,
 // };
-
-//pop-up class
-// ui - dialog - titlebar - close;

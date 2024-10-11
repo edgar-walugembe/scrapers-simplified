@@ -207,7 +207,9 @@ async function startCrawler() {
         (imgs) => imgs.map((img) => img.src)
       );
 
-      const CoverImage = otherCarImages[0];
+      const CoverImage =
+        otherCarImages[0] ||
+        "https://www.jpsubarunorthshore.com/wp-content/themes/convertus-achilles/achilles/assets/images/srp-placeholder/PV.jpg";
 
       let BodyType = (await page.isVisible(
         ".info__item--body-style span.info__value"
