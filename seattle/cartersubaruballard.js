@@ -405,8 +405,8 @@ async function startCrawler() {
   await browser.close();
 }
 
-startCrawler();
+// startCrawler();
 
-// module.exports = {
-//   startCrawler,
-// };
+module.exports = {
+  startCrawler,
+};
