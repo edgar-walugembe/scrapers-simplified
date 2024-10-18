@@ -1,20 +1,16 @@
 {
-  "name": "scraper_simplified",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "name": "scraper-simplified",
+  "version": "0.0.0",
+  "private": true,
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "npx playwright install && node index.js"
+    "start": "node ./bin/www"
   },
-  "author": "",
-  "license": "ISC",
   "dependencies": {
-    "axios": "^1.7.7",
-    "cronitor": "^2.4.1",
-    "dotenv": "^16.4.5",
-    "node-cron": "^3.0.3",
-    "playwright": "^1.47.2",
-    "uuid": "^10.0.0"
+    "cookie-parser": "~1.4.4",
+    "debug": "~2.6.9",
+    "express": "~4.16.1",
+    "http-errors": "~1.6.3",
+    "jade": "~1.11.0",
+    "morgan": "~1.9.1"
   }
 }

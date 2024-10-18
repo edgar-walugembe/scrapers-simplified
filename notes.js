@@ -27,3 +27,5 @@ const carDetails = {
 
 //carImage url for car without images
 ("https://www.jpsubarunorthshore.com/wp-content/themes/convertus-achilles/achilles/assets/images/srp-placeholder/PV.jpg");
+
+//  "start": "npx playwright install && node index.js"
