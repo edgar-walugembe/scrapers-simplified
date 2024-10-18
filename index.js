@@ -39,10 +39,16 @@ async function runAllScrapers() {
   }
 }
 
-cron.schedule("0 0 * * *", async () => {
-  console.log("Running scheduled scrapers...");
-  await runAllScrapers();
-  console.log("Finished running scrapers.");
-});
+cron.schedule(
+  "30 1 * * *",
+  async () => {
+    console.log("Running scheduled scrapers...");
+    await runAllScrapers();
+    console.log("Finished running scrapers.");
+  },
+  {
+    timezone: "Africa/Nairobi",
+  }
+);
 
-console.log("Cron job set up to run every day at midnight.");
+console.log("Cron job set up to run every day at 4:30 AM EAT.");
