@@ -1,7 +1,7 @@
 const fs = require("fs");
 const path = require("path");
+const cron = require("node-cron");
 
-// Use __dirname in CommonJS, no need to redefine it
 const rootDir = __dirname;
 
 async function runAllScrapers() {
@@ -39,4 +39,10 @@ async function runAllScrapers() {
   }
 }
 
-runAllScrapers();
+cron.schedule("0 0 * * *", async () => {
+  console.log("Running scheduled scrapers...");
+  await runAllScrapers();
+  console.log("Finished running scrapers.");
+});
+
+console.log("Cron job set up to run every day at midnight.");
