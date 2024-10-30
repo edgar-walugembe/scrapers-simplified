@@ -99,30 +99,19 @@ function getMainBodyType(bodyType) {
   }
 }
 
-const cars = [];
+async function sendCarToBubble(car) {
+  const url =
+    "https://voxcar-65775.bubbleapps.io/version-test/api/1.1/obj/cars";
 
-function chunkArray(array, size) {
-  const result = [];
-  for (let i = 0; i < array.length; i += size) {
-    result.push(array.slice(i, i + size));
-  }
-  return result;
-}
-
-async function sendScrapedCarsToAPI(cars) {
-  const chunkSize = 10;
-  const url = "https://scraper-db-api.onrender.com/cars/new-cars";
-  const carChunks = chunkArray(cars, chunkSize);
-
-  for (const chunk of carChunks) {
-    try {
-      const response = await axios.post(url, {
-        cars: chunk,
-      });
-      console.log("Cars successfully added:", response.data);
-    } catch (error) {
-      console.error("Error adding cars:", error);
-    }
+  try {
+    const response = await axios.post(url, car, {
+      headers: {
+        Authorization: `Bearer 6af869f6680291881c0d8fbcfa686ff3`,
+      },
+    });
+    console.log("Car successfully added:", response.data);
+  } catch (error) {
+    console.error("Error adding car:", error.response?.data || error.message);
   }
 }
 
@@ -183,7 +172,7 @@ async function startCrawler() {
         "https://www.jpsubarunorthshore.com/wp-content/themes/convertus-achilles/achilles/assets/images/srp-placeholder/PV.jpg";
 
       await page.waitForSelector(".thumb img");
-      const otherCarImages = await page.$$eval(".thumb img", (imgs) =>
+      const OtherCarImages = await page.$$eval(".thumb img", (imgs) =>
         imgs.map((img) => img.src)
       );
 
@@ -219,7 +208,7 @@ async function startCrawler() {
             .textContent()
         : "Not Available";
 
-      const Drivetrain = (await page.isVisible(
+      const DriveTrain = (await page.isVisible(
         "div:nth-of-type(3) tr:nth-of-type(3) td.td-odd"
       ))
         ? await page
@@ -243,7 +232,7 @@ async function startCrawler() {
 
       const carDetails = {
         car_url: carLink,
-        car_id: uuidv4(),
+        carId: uuidv4(),
         Location,
         Make: Make.toLowerCase(),
         Model: Model.toLowerCase(),
@@ -255,26 +244,32 @@ async function startCrawler() {
         ExteriorColor,
         InteriorColor,
         Transmission,
-        Drivetrain,
+        DriveTrain,
         FuelType,
         CoverImage,
-        otherCarImages,
+        OtherCarImages,
         Engine,
         Stock_Number,
       };
 
       console.log(`Car_Number: #${carCounter}`);
-      cars.push(carDetails);
+      await sendCarToBubble(carDetails);
+      console.log(carDetails);
     } catch (error) {
       console.error(`Error scraping car at ${carLink}:`, error);
     }
 
     await page.waitForTimeout(5000);
   }
-  await sendScrapedCarsToAPI(cars);
 
   await browser.close();
 }
+
+module.exports = {
+  startCrawler,
+};
+
+// startCrawler();
 
 //       let previousHeight;
 //       let newHeight = await page.evaluate(() => document.body.scrollHeight);
@@ -283,7 +278,3 @@ async function startCrawler() {
 //         await page.evaluate(() => window.scrollBy(0, window.innerHeight));
 //         await page.waitForTimeout(3000);
 //         newHeight = await page.evaluate(() => document.body.scrollHeight);
-
-module.exports = {
-  startCrawler,
-};

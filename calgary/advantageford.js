@@ -100,31 +100,19 @@ function getMainBodyType(bodyType) {
   }
 }
 
-const cars = [];
+async function sendCarToBubble(car) {
+  const url =
+    "https://voxcar-65775.bubbleapps.io/version-test/api/1.1/obj/cars";
 
-function chunkArray(array, size) {
-  const result = [];
-  for (let i = 0; i < array.length; i += size) {
-    result.push(array.slice(i, i + size));
-  }
-  return result;
-}
-
-async function sendScrapedCarsToAPI(cars) {
-  const chunkSize = 10;
-  const url = "https://scraper-db-api.onrender.com/cars/new-cars";
-  const carChunks = chunkArray(cars, chunkSize);
-
-  for (const chunk of carChunks) {
-    try {
-      const response = await axios.post(url, {
-        cars: chunk,
-      });
-      console.log("Cars successfully added:", response.data);
-    } catch (error) {
-      console.error("Error adding cars:", error);
-    }
-    await new Promise((resolve) => setTimeout(resolve, 5000));
+  try {
+    const response = await axios.post(url, car, {
+      headers: {
+        Authorization: `Bearer 6af869f6680291881c0d8fbcfa686ff3`,
+      },
+    });
+    console.log("Car successfully added:", response.data);
+  } catch (error) {
+    console.error("Error adding car:", error.response?.data || error.message);
   }
 }
 
@@ -244,7 +232,7 @@ async function startCrawler() {
         ? await page.locator("td[itemprop='vehicleEngine']").textContent()
         : "Not Available";
 
-      const Drivetrain = (await page.isVisible(
+      const DriveTrain = (await page.isVisible(
         "div.col-xs-12:nth-of-type(3) tr:nth-of-type(3) td.td-odd"
       ))
         ? await page
@@ -286,15 +274,15 @@ async function startCrawler() {
         (await page.locator("img[itemprop='image']").getAttribute("src")) ||
         "https://www.jpsubarunorthshore.com/wp-content/themes/convertus-achilles/achilles/assets/images/srp-placeholder/PV.jpg";
 
-      let otherCarImages = [];
+      let OtherCarImages = [];
       await page.waitForSelector(".thumb img");
-      otherCarImages = await page.$$eval(".thumb img", (imgs) =>
+      OtherCarImages = await page.$$eval(".thumb img", (imgs) =>
         imgs.map((img) => img.src)
       );
 
       const carDetails = {
         car_url: carLink,
-        car_id: uuidv4(),
+        carId: uuidv4(),
         Location,
         Make: Make ? Make.toLowerCase() : "Not Available",
         Model: Model ? Model.toLowerCase() : "Not Available",
@@ -306,32 +294,32 @@ async function startCrawler() {
         InteriorColor,
         Transmission,
         FuelType,
-        Drivetrain,
+        DriveTrain,
         Engine,
         CoverImage,
-        otherCarImages,
+        OtherCarImages,
         VIN,
         Stock_Number,
       };
 
       console.log(`Car_Number: #${carCounter}`);
+      await sendCarToBubble(carDetails);
       console.log(carDetails);
-      cars.push(carDetails);
     } catch (error) {
       console.error(`Error scraping car at ${carLink}:`, error);
     }
 
     await page.waitForTimeout(5000);
   }
-  await sendScrapedCarsToAPI(cars);
 
   await browser.close();
 }
-// startCrawler();
 
 module.exports = {
   startCrawler,
 };
+
+// startCrawler();
 
 // cron.schedule(
 //   "10 3 * * *",

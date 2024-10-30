@@ -142,7 +142,7 @@ async function startCrawler() {
 
   const page = await browser.newPage();
 
-  await page.goto(`https://www.suburbanmotors.com/new/inventory/search.html`, {
+  await page.goto(`https://www.suburbanlincoln.ca/new/inventory/search.html`, {
     waitUntil: "domcontentloaded",
     timeout: 120000,
   });
@@ -178,7 +178,7 @@ async function startCrawler() {
 
       await page.goto(carLink, {
         waitUntil: "domcontentloaded",
-        timeout: 120000,
+        timeout: 60000,
       });
 
       try {

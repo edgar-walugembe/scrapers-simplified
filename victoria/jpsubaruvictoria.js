@@ -99,30 +99,19 @@ function getMainBodyType(bodyType) {
   }
 }
 
-const cars = [];
+async function sendCarToBubble(car) {
+  const url =
+    "https://voxcar-65775.bubbleapps.io/version-test/api/1.1/obj/cars";
 
-function chunkArray(array, size) {
-  const result = [];
-  for (let i = 0; i < array.length; i += size) {
-    result.push(array.slice(i, i + size));
-  }
-  return result;
-}
-
-async function sendScrapedCarsToAPI(cars) {
-  const chunkSize = 10;
-  const url = "https://scraper-db-api.onrender.com/cars/new-cars";
-  const carChunks = chunkArray(cars, chunkSize);
-
-  for (const chunk of carChunks) {
-    try {
-      const response = await axios.post(url, {
-        cars: chunk,
-      });
-      console.log("Cars successfully added:", response.data);
-    } catch (error) {
-      console.error("Error adding cars:", error);
-    }
+  try {
+    const response = await axios.post(url, car, {
+      headers: {
+        Authorization: `Bearer 6af869f6680291881c0d8fbcfa686ff3`,
+      },
+    });
+    console.log("Car successfully added:", response.data);
+  } catch (error) {
+    console.error("Error adding car:", error.response?.data || error.message);
   }
 }
 
@@ -234,7 +223,7 @@ async function startCrawler() {
         ? await page.locator(".col[data-spec='engine'] p").textContent()
         : "Not Available";
 
-      const Drivetrain = (await page.isVisible(
+      const DriveTrain = (await page.isVisible(
         ".col[data-spec='drive_train'] p"
       ))
         ? await page.locator(".col[data-spec='drive_train'] p").textContent()
@@ -288,7 +277,7 @@ async function startCrawler() {
       const isViewImagesButtonVisible = await page.isVisible(
         "div.photo-gallery__buttons-container.photo-gallery__buttons-container--right"
       );
-      let otherCarImages = [];
+      let OtherCarImages = [];
       if (isViewImagesButtonVisible) {
         try {
           await page.click(
@@ -297,7 +286,7 @@ async function startCrawler() {
           await page.waitForTimeout(3000);
           if (await page.isVisible("img.vgs__gallery__container__img")) {
             await page.waitForSelector("img.vgs__gallery__container__img");
-            otherCarImages = await page.$$eval(
+            OtherCarImages = await page.$$eval(
               "img.vgs__gallery__container__img",
               (imgs) => imgs.map((img) => img.src)
             );
@@ -310,12 +299,12 @@ async function startCrawler() {
       }
 
       const CoverImage =
-        otherCarImages[0] ||
+        OtherCarImages[0] ||
         "https://www.jpsubarunorthshore.com/wp-content/themes/convertus-achilles/achilles/assets/images/srp-placeholder/PV.jpg";
 
       const carDetails = {
         car_url: carLink,
-        car_id: uuidv4(),
+        carId: uuidv4(),
         Location,
         Make: Make ? Make.toLowerCase() : "Not Available",
         Model: Model ? Model.toLowerCase() : "Not Available",
@@ -328,30 +317,29 @@ async function startCrawler() {
         InteriorColor,
         Transmission,
         FuelType,
-        Drivetrain,
+        DriveTrain,
         Engine,
         CoverImage,
-        otherCarImages,
+        OtherCarImages,
         VIN: VIN || "Not Available",
         Stock_Number: Stock_Number || "Not Available",
       };
 
       console.log(`Car_Number: #${carCounter}`);
+      await sendCarToBubble(carDetails);
       console.log(carDetails);
-      cars.push(carDetails);
     } catch (error) {
       console.error(`Error scraping car at ${carLink}:`, error);
     }
 
     await page.waitForTimeout(5000);
   }
-  await sendScrapedCarsToAPI(cars);
 
   await browser.close();
 }
 
-// startCrawler();
-
 module.exports = {
   startCrawler,
 };
+
+// startCrawler();
