@@ -1,500 +1,517 @@
-const playwright = require("playwright");
-const { v4: uuidv4 } = require("uuid");
-const axios = require("axios");
-const dotenv = require("dotenv");
-dotenv.config();
+// const playwright = require("playwright");
+// const { v4: uuidv4 } = require("uuid");
+// const axios = require("axios");
+// const dotenv = require("dotenv");
+// dotenv.config();
 
-async function sendCarToBubble(car) {
-  const url =
-    "https://voxcar-65775.bubbleapps.io/version-test/api/1.1/obj/cars";
+// async function sendCarToBubble(car) {
+//   const baseUrl =
+//     "https://voxcar-65775.bubbleapps.io/version-test/api/1.1/obj/cars";
+//   const queryUrl = `${baseUrl}?constraints=${encodeURIComponent(
+//     JSON.stringify([
+//       { key: "car_url", constraint_type: "equals", value: car.car_url },
+//     ])
+//   )}`;
 
-  try {
-    const response = await axios.post(url, car, {
-      headers: {
-        Authorization: `Bearer 6af869f6680291881c0d8fbcfa686ff3`,
-      },
-    });
-    console.log("Car successfully added:", response.data);
-  } catch (error) {
-    console.error("Error adding car:", error.response?.data || error.message);
-  }
-}
+//   try {
+//     const checkResponse = await axios.get(queryUrl, {
+//       headers: {
+//         Authorization: `Bearer 6af869f6680291881c0d8fbcfa686ff3`,
+//       },
+//     });
 
-async function autoScroll(page) {
-  await page.evaluate(async () => {
-    await new Promise((resolve) => {
-      let totalHeight = 0;
-      const distance = 100; // Scroll 100px at a time
-      const timer = setInterval(() => {
-        const scrollHeight = document.body.scrollHeight;
-        window.scrollBy(0, distance);
-        totalHeight += distance;
+//     if (checkResponse.data.response.results.length > 0) {
+//       console.log(`Car with URL ${car.car_url} is already in the database.`);
+//       return;
+//     }
 
-        if (totalHeight >= scrollHeight) {
-          clearInterval(timer);
-          resolve();
-        }
-      }, 300); // Scroll every 100ms
-    });
-  });
-}
+//     const response = await axios.post(baseUrl, car, {
+//       headers: {
+//         Authorization: `Bearer 6af869f6680291881c0d8fbcfa686ff3`,
+//       },
+//     });
 
-async function startCrawler() {
-  const browser = await playwright.chromium.launch({
-    headless: false,
-  });
+//     console.log("Car successfully added:", response.data);
+//   } catch (error) {
+//     console.error("Error adding car:", error.response?.data || error.message);
+//   }
+// }
 
-  const page = await browser.newPage();
+// async function autoScroll(page) {
+//   await page.evaluate(async () => {
+//     await new Promise((resolve) => {
+//       let totalHeight = 0;
+//       const distance = 100; // Scroll 100px at a time
+//       const timer = setInterval(() => {
+//         const scrollHeight = document.body.scrollHeight;
+//         window.scrollBy(0, distance);
+//         totalHeight += distance;
 
-  await page.goto(`https://www.mazdaofseattle.com/search/new-mazda/?tp=new/`, {
-    waitUntil: "domcontentloaded",
-    timeout: 120000,
-  });
+//         if (totalHeight >= scrollHeight) {
+//           clearInterval(timer);
+//           resolve();
+//         }
+//       }, 300); // Scroll every 100ms
+//     });
+//   });
+// }
 
-  const isCookiesVisible = await page.isVisible(
-    "button[data-tid='banner-accept']"
-  );
-  if (isCookiesVisible) {
-    await page.click("button[data-tid='banner-accept']");
-    await page.waitForTimeout(3000);
-  }
+// async function startCrawler() {
+//   const browser = await playwright.chromium.launch({
+//     headless: false,
+//   });
 
-  //   const isMessageVisible = await page.isVisible("span.close.show");
-  //   if (isMessageVisible) {
-  //     await page.click("span.close.show");
-  //     await page.waitForTimeout(3000);
-  //   }
+//   const page = await browser.newPage();
 
-  //   const isChatVisible = await page.isVisible("span.close.pointer");
-  //   if (isChatVisible) {
-  //     await page.click("span.close.pointer");
-  //     await page.waitForTimeout(3000);
-  //   }
+//   await page.goto(`https://www.mazdaofseattle.com/search/new-mazda/?tp=new/`, {
+//     waitUntil: "domcontentloaded",
+//     timeout: 120000,
+//   });
 
-  let carCounter = 0;
+//   const isCookiesVisible = await page.isVisible(
+//     "button[data-tid='banner-accept']"
+//   );
+//   if (isCookiesVisible) {
+//     await page.click("button[data-tid='banner-accept']");
+//     await page.waitForTimeout(3000);
+//   }
 
-  // let pageNumber = 1;
-  let hasNextPage = true;
+//   //   const isMessageVisible = await page.isVisible("span.close.show");
+//   //   if (isMessageVisible) {
+//   //     await page.click("span.close.show");
+//   //     await page.waitForTimeout(3000);
+//   //   }
 
-  while (hasNextPage) {
-    let previousHeight = await page.evaluate("document.body.scrollHeight");
-    let reachedEnd = false;
+//   //   const isChatVisible = await page.isVisible("span.close.pointer");
+//   //   if (isChatVisible) {
+//   //     await page.click("span.close.pointer");
+//   //     await page.waitForTimeout(3000);
+//   //   }
 
-    while (!reachedEnd) {
-      await autoScroll(page);
-      await page.waitForTimeout(2000);
+//   let carCounter = 0;
 
-      let newHeight = await page.evaluate("document.body.scrollHeight");
-      if (newHeight === previousHeight) {
-        reachedEnd = true;
-      }
-      previousHeight = newHeight;
-    }
+//   // let pageNumber = 1;
+//   let hasNextPage = true;
 
-    const baseURL = "https://www.mazdaofseattle.com";
-    const productLocators = page.locator("ul.dep_image_slider_ul_style");
-    const carLinks = await productLocators.evaluateAll((elements) =>
-      elements.map((element) => element.getAttribute("data-vdp_link"))
-    );
+//   while (hasNextPage) {
+//     let previousHeight = await page.evaluate("document.body.scrollHeight");
+//     let reachedEnd = false;
 
-    const fullURLs = carLinks.map((carLink) =>
-      carLink.startsWith("http") ? carLink : `${baseURL}${carLink}`
-    );
+//     while (!reachedEnd) {
+//       await autoScroll(page);
+//       await page.waitForTimeout(2000);
 
-    console.log(`Found ${fullURLs.length} car links`);
+//       let newHeight = await page.evaluate("document.body.scrollHeight");
+//       if (newHeight === previousHeight) {
+//         reachedEnd = true;
+//       }
+//       previousHeight = newHeight;
+//     }
 
-    for (const fullURL of fullURLs) {
-      carCounter++;
+//     const baseURL = "https://www.mazdaofseattle.com";
+//     const productLocators = page.locator("ul.dep_image_slider_ul_style");
+//     const carLinks = await productLocators.evaluateAll((elements) =>
+//       elements.map((element) => element.getAttribute("data-vdp_link"))
+//     );
 
-      await page.goto(fullURL, {
-        waitUntil: "domcontentloaded",
-        timeout: 60000,
-      });
+//     const fullURLs = carLinks.map((carLink) =>
+//       carLink.startsWith("http") ? carLink : `${baseURL}${carLink}`
+//     );
 
-      try {
-        function extractCarDetails(url) {
-          const regex = /\/new-(\d{4})-(mazda)-([\w\d]+)(?:-([\w\d-]+))?-.*$/;
-          const match = url.match(regex);
+//     console.log(`Found ${fullURLs.length} car links`);
 
-          if (match) {
-            const year = match[1];
-            const make = match[2].replace(/-/g, " ");
-            const model = match[3].replace(/-/g, " ");
+//     for (const fullURL of fullURLs) {
+//       carCounter++;
 
-            return { year, make, model };
-          } else {
-            console.log("No match found for car details in the URL.");
-          }
-        }
+//       await page.goto(fullURL, {
+//         waitUntil: "domcontentloaded",
+//         timeout: 60000,
+//       });
 
-        const { year, make, model } = extractCarDetails(fullURL) || {};
+//       try {
+//         function extractCarDetails(url) {
+//           const regex = /\/new-(\d{4})-(mazda)-([\w\d]+)(?:-([\w\d-]+))?-.*$/;
+//           const match = url.match(regex);
 
-        const Year = year || "Year Not Found";
-        const Make = make || "Make Not Found";
-        const Model = model || "Model Not Found";
+//           if (match) {
+//             const year = match[1];
+//             const make = match[2].replace(/-/g, " ");
+//             const model = match[3].replace(/-/g, " ");
 
-        function getBodyTypeFromUrl(url) {
-          const bodyTypes = {
-            sedan: [
-              "sedan",
-              "compact sedan",
-              "subcompact sedan",
-              "midsize sedan",
-              "full-size sedan",
-              "executive sedan",
-              "luxury sedan",
-              "sports sedan",
-            ],
-            hatchback: [
-              "hatchback",
-              "3-door hatchback",
-              "5-door hatchback",
-              "compact hatchback",
-              "subcompact hatchback",
-            ],
-            suv: [
-              "suv",
-              "crossover",
-              "compact suv",
-              "midsize suv",
-              "full-size suv",
-              "off-road suv",
-              "luxury suv",
-              "subcompact suv",
-            ],
-            coupe: [
-              "coupe",
-              "sports coupe",
-              "grand tourer",
-              "hardtop coupe",
-              "luxury coupe",
-              "performance coupe",
-              "sports-utility",
-              "sport utility",
-              "sport",
-            ],
-            truck: [
-              "truck",
-              "crew cab",
-              "pickup truck",
-              "pickup",
-              "light duty truck",
-              "heavy duty truck",
-              "extended cab",
-              "extended cab truck",
-              "compact truck",
-              "off-road truck",
-              "full-size truck",
-            ],
-            wagon: [
-              "wagon",
-              "super-wagon",
-              "station wagon",
-              "estate wagon",
-              "sports wagon",
-              "crossover wagon",
-              "luxury wagon",
-            ],
-            convertible: [
-              "convertible",
-              "roadster",
-              "cabriolet",
-              "hardtop convertible",
-              "soft-top convertible",
-              "targa",
-              "2-seater convertible",
-            ],
-            van: [
-              "van",
-              "minivan",
-              "passenger van",
-              "cargo van",
-              "full-size van",
-              "compact van",
-              "conversion van",
-              "camper van",
-            ],
-          };
+//             return { year, make, model };
+//           } else {
+//             console.log("No match found for car details in the URL.");
+//           }
+//         }
 
-          try {
-            const lowerCaseUrl = url.toLowerCase();
-            for (let mainType in bodyTypes) {
-              for (let type of bodyTypes[mainType]) {
-                if (lowerCaseUrl.includes(type.toLowerCase())) {
-                  return mainType;
-                }
-              }
-            }
+//         const { year, make, model } = extractCarDetails(fullURL) || {};
 
-            throw new Error("No body type found in the URL");
-          } catch (error) {
-            return "Not Available";
-          }
-        }
-        const BodyType = getBodyTypeFromUrl(fullURL);
+//         const Year = year || "Year Not Found";
+//         const Make = make || "Make Not Found";
+//         const Model = model || "Model Not Found";
 
-        const Location = "Seattle";
+//         function getBodyTypeFromUrl(url) {
+//           const bodyTypes = {
+//             sedan: [
+//               "sedan",
+//               "compact sedan",
+//               "subcompact sedan",
+//               "midsize sedan",
+//               "full-size sedan",
+//               "executive sedan",
+//               "luxury sedan",
+//               "sports sedan",
+//             ],
+//             hatchback: [
+//               "hatchback",
+//               "3-door hatchback",
+//               "5-door hatchback",
+//               "compact hatchback",
+//               "subcompact hatchback",
+//             ],
+//             suv: [
+//               "suv",
+//               "crossover",
+//               "compact suv",
+//               "midsize suv",
+//               "full-size suv",
+//               "off-road suv",
+//               "luxury suv",
+//               "subcompact suv",
+//             ],
+//             coupe: [
+//               "coupe",
+//               "sports coupe",
+//               "grand tourer",
+//               "hardtop coupe",
+//               "luxury coupe",
+//               "performance coupe",
+//               "sports-utility",
+//               "sport utility",
+//               "sport",
+//             ],
+//             truck: [
+//               "truck",
+//               "crew cab",
+//               "pickup truck",
+//               "pickup",
+//               "light duty truck",
+//               "heavy duty truck",
+//               "extended cab",
+//               "extended cab truck",
+//               "compact truck",
+//               "off-road truck",
+//               "full-size truck",
+//             ],
+//             wagon: [
+//               "wagon",
+//               "super-wagon",
+//               "station wagon",
+//               "estate wagon",
+//               "sports wagon",
+//               "crossover wagon",
+//               "luxury wagon",
+//             ],
+//             convertible: [
+//               "convertible",
+//               "roadster",
+//               "cabriolet",
+//               "hardtop convertible",
+//               "soft-top convertible",
+//               "targa",
+//               "2-seater convertible",
+//             ],
+//             van: [
+//               "van",
+//               "minivan",
+//               "passenger van",
+//               "cargo van",
+//               "full-size van",
+//               "compact van",
+//               "conversion van",
+//               "camper van",
+//             ],
+//           };
 
-        let Price;
-        if (await page.isVisible('dt:has-text("Mazda of Seattle Price")')) {
-          const priceElement = page
-            .locator('dt:has-text("Mazda of Seattle Price")')
-            .locator("xpath=following-sibling::dd[1]");
-          const price = await priceElement.textContent();
-          Price = price.trim().replace(/[$,\s]+/g, "");
-        } else if (await page.isVisible("dd.vehicle_price")) {
-          const priceElement = page.locator("dd.vehicle_price");
-          const price = await priceElement.textContent();
-          Price = price.trim().replace(/[$,\s]+/g, "");
-        } else {
-          Price = "Not Available";
-        }
+//           try {
+//             const lowerCaseUrl = url.toLowerCase();
+//             for (let mainType in bodyTypes) {
+//               for (let type of bodyTypes[mainType]) {
+//                 if (lowerCaseUrl.includes(type.toLowerCase())) {
+//                   return mainType;
+//                 }
+//               }
+//             }
 
-        Price = parseFloat(Price)
-          ? `$${parseFloat(Price).toLocaleString()}`
-          : Price;
+//             throw new Error("No body type found in the URL");
+//           } catch (error) {
+//             return "Not Available";
+//           }
+//         }
+//         const BodyType = getBodyTypeFromUrl(fullURL);
 
-        const isViewGalleryButtonVisible = await page.isVisible(
-          "a.dep_image_slider_view_all"
-        );
-        let OtherCarImages = [];
-        if (isViewGalleryButtonVisible) {
-          try {
-            await page.click("a.dep_image_slider_view_all");
-            await page.waitForTimeout(3000);
-            if (
-              await page.isVisible(
-                "div.view_all_images_wrapper img.veh-image-tag"
-              )
-            ) {
-              await page.waitForSelector(
-                "div.view_all_images_wrapper img.veh-image-tag"
-              );
-              OtherCarImages = await page.$$eval(
-                "div.view_all_images_wrapper img.veh-image-tag",
-                (imgs) => imgs.map((img) => img.src)
-              );
-            }
-          } catch (error) {
-            console.log("Error fetching additional images:", error);
-          }
-        } else {
-          console.log(`Zoom Icon absent for car at: ${carLink}`);
-        }
+//         const Location = "Seattle";
 
-        // await page.click("a.dep_image_slider_view_all");
-        // await page.waitForSelector(
-        //   "div.view_all_images_wrapper img.veh-image-tag"
-        // );
-        // const OtherCarImages = await page.$$eval(
-        //   "div.view_all_images_wrapper img.veh-image-tag",
-        //   (imgs) => imgs.map((img) => img.src)
-        // );
+//         let Price;
+//         if (await page.isVisible('dt:has-text("Mazda of Seattle Price")')) {
+//           const priceElement = page
+//             .locator('dt:has-text("Mazda of Seattle Price")')
+//             .locator("xpath=following-sibling::dd[1]");
+//           const price = await priceElement.textContent();
+//           Price = price.trim().replace(/[$,\s]+/g, "");
+//         } else if (await page.isVisible("dd.vehicle_price")) {
+//           const priceElement = page.locator("dd.vehicle_price");
+//           const price = await priceElement.textContent();
+//           Price = price.trim().replace(/[$,\s]+/g, "");
+//         } else {
+//           Price = "Not Available";
+//         }
 
-        const CoverImage =
-          OtherCarImages[0] ||
-          "https://www.jpsubarunorthshore.com/wp-content/themes/convertus-achilles/achilles/assets/images/srp-placeholder/PV.jpg";
+//         Price = parseFloat(Price)
+//           ? `$${parseFloat(Price).toLocaleString()}`
+//           : Price;
 
-        const Trim = (await page
-          .locator(
-            "tr:has(td.details-overview_title:text('Trim')) >> td.details-overview_data"
-          )
-          .isVisible())
-          ? await page
-              .locator(
-                "tr:has(td.details-overview_title:text('Trim')) >> td.details-overview_data"
-              )
-              .textContent()
-          : "Not Available";
+//         const isViewGalleryButtonVisible = await page.isVisible(
+//           "a.dep_image_slider_view_all"
+//         );
+//         let OtherCarImages = [];
+//         if (isViewGalleryButtonVisible) {
+//           try {
+//             await page.click("a.dep_image_slider_view_all");
+//             await page.waitForTimeout(3000);
+//             if (
+//               await page.isVisible(
+//                 "div.view_all_images_wrapper img.veh-image-tag"
+//               )
+//             ) {
+//               await page.waitForSelector(
+//                 "div.view_all_images_wrapper img.veh-image-tag"
+//               );
+//               OtherCarImages = await page.$$eval(
+//                 "div.view_all_images_wrapper img.veh-image-tag",
+//                 (imgs) => imgs.map((img) => img.src)
+//               );
+//             }
+//           } catch (error) {
+//             console.log("Error fetching additional images:", error);
+//           }
+//         } else {
+//           console.log(`Zoom Icon absent for car at: ${carLink}`);
+//         }
 
-        const Mileage = (await page
-          .locator(
-            "tr:has(td.details-overview_title:text('Mileage')) >> td.details-overview_data"
-          )
-          .isVisible())
-          ? await page
-              .locator(
-                "tr:has(td.details-overview_title:text('Mileage')) >> td.details-overview_data"
-              )
-              .textContent()
-          : "Not Available";
+//         // await page.click("a.dep_image_slider_view_all");
+//         // await page.waitForSelector(
+//         //   "div.view_all_images_wrapper img.veh-image-tag"
+//         // );
+//         // const OtherCarImages = await page.$$eval(
+//         //   "div.view_all_images_wrapper img.veh-image-tag",
+//         //   (imgs) => imgs.map((img) => img.src)
+//         // );
 
-        const ExteriorColor = (await page
-          .locator(
-            "tr:has(td.details-overview_title:text('Exterior Color')) >> td.details-overview_data"
-          )
-          .isVisible())
-          ? await page
-              .locator(
-                "tr:has(td.details-overview_title:text('Exterior Color')) >> td.details-overview_data"
-              )
-              .textContent()
-          : "Not Available";
+//         const CoverImage =
+//           OtherCarImages[0] ||
+//           "https://www.jpsubarunorthshore.com/wp-content/themes/convertus-achilles/achilles/assets/images/srp-placeholder/PV.jpg";
 
-        const InteriorColor = (await page
-          .locator(
-            "tr:has(td.details-overview_title:text('Interior Color')) >> td.details-overview_data"
-          )
-          .isVisible())
-          ? await page
-              .locator(
-                "tr:has(td.details-overview_title:text('Interior Color')) >> td.details-overview_data"
-              )
-              .textContent()
-          : "Not Available";
+//         const Trim = (await page
+//           .locator(
+//             "tr:has(td.details-overview_title:text('Trim')) >> td.details-overview_data"
+//           )
+//           .isVisible())
+//           ? await page
+//               .locator(
+//                 "tr:has(td.details-overview_title:text('Trim')) >> td.details-overview_data"
+//               )
+//               .textContent()
+//           : "Not Available";
 
-        const Transmission = (await page
-          .locator(
-            "tr:has(td.details-overview_title:text('Transmission')) >> td.details-overview_data"
-          )
-          .isVisible())
-          ? await page
-              .locator(
-                "tr:has(td.details-overview_title:text('Transmission')) >> td.details-overview_data"
-              )
-              .textContent()
-          : "Not Available";
+//         const Mileage = (await page
+//           .locator(
+//             "tr:has(td.details-overview_title:text('Mileage')) >> td.details-overview_data"
+//           )
+//           .isVisible())
+//           ? await page
+//               .locator(
+//                 "tr:has(td.details-overview_title:text('Mileage')) >> td.details-overview_data"
+//               )
+//               .textContent()
+//           : "Not Available";
 
-        const Engine = (await page
-          .locator(
-            "tr:has(td.details-overview_title:text('Engine')) >> td.details-overview_data"
-          )
-          .isVisible())
-          ? await page
-              .locator(
-                "tr:has(td.details-overview_title:text('Engine')) >> td.details-overview_data"
-              )
-              .textContent()
-          : "Not Available";
+//         const ExteriorColor = (await page
+//           .locator(
+//             "tr:has(td.details-overview_title:text('Exterior Color')) >> td.details-overview_data"
+//           )
+//           .isVisible())
+//           ? await page
+//               .locator(
+//                 "tr:has(td.details-overview_title:text('Exterior Color')) >> td.details-overview_data"
+//               )
+//               .textContent()
+//           : "Not Available";
 
-        const DriveTrain = (await page
-          .locator(
-            "tr:has(td.details-overview_title:text('Drivetrain')) >> td.details-overview_data"
-          )
-          .isVisible())
-          ? await page
-              .locator(
-                "tr:has(td.details-overview_title:text('Drivetrain')) >> td.details-overview_data"
-              )
-              .textContent()
-          : "Not Available";
+//         const InteriorColor = (await page
+//           .locator(
+//             "tr:has(td.details-overview_title:text('Interior Color')) >> td.details-overview_data"
+//           )
+//           .isVisible())
+//           ? await page
+//               .locator(
+//                 "tr:has(td.details-overview_title:text('Interior Color')) >> td.details-overview_data"
+//               )
+//               .textContent()
+//           : "Not Available";
 
-        const Stock_Number = (await page
-          .locator(
-            "tr:has(td.details-overview_title:text('Stock #')) >> td.details-overview_data"
-          )
-          .isVisible())
-          ? await page
-              .locator(
-                "tr:has(td.details-overview_title:text('Stock #')) >> td.details-overview_data"
-              )
-              .textContent()
-          : "Not Available";
+//         const Transmission = (await page
+//           .locator(
+//             "tr:has(td.details-overview_title:text('Transmission')) >> td.details-overview_data"
+//           )
+//           .isVisible())
+//           ? await page
+//               .locator(
+//                 "tr:has(td.details-overview_title:text('Transmission')) >> td.details-overview_data"
+//               )
+//               .textContent()
+//           : "Not Available";
 
-        const VIN = (await page
-          .locator(
-            "tr:has(td.details-overview_title:text('VIN')) >> td.details-overview_data"
-          )
-          .isVisible())
-          ? await page
-              .locator(
-                "tr:has(td.details-overview_title:text('VIN')) >> td.details-overview_data"
-              )
-              .textContent()
-          : "Not Available";
+//         const Engine = (await page
+//           .locator(
+//             "tr:has(td.details-overview_title:text('Engine')) >> td.details-overview_data"
+//           )
+//           .isVisible())
+//           ? await page
+//               .locator(
+//                 "tr:has(td.details-overview_title:text('Engine')) >> td.details-overview_data"
+//               )
+//               .textContent()
+//           : "Not Available";
 
-        const Doors = (await page
-          .locator(
-            "tr:has(td.details-overview_title:text('Doors')) >> td.details-overview_data"
-          )
-          .isVisible())
-          ? await page
-              .locator(
-                "tr:has(td.details-overview_title:text('Doors')) >> td.details-overview_data"
-              )
-              .textContent()
-          : "Not Available";
+//         const DriveTrain = (await page
+//           .locator(
+//             "tr:has(td.details-overview_title:text('Drivetrain')) >> td.details-overview_data"
+//           )
+//           .isVisible())
+//           ? await page
+//               .locator(
+//                 "tr:has(td.details-overview_title:text('Drivetrain')) >> td.details-overview_data"
+//               )
+//               .textContent()
+//           : "Not Available";
 
-        const Seats = (await page
-          .locator(
-            "tr:has(td.details-overview_title:text('Passengers')) >> td.details-overview_data"
-          )
-          .isVisible())
-          ? await page
-              .locator(
-                "tr:has(td.details-overview_title:text('Passengers')) >> td.details-overview_data"
-              )
-              .textContent()
-          : "Not Available";
+//         const Stock_Number = (await page
+//           .locator(
+//             "tr:has(td.details-overview_title:text('Stock #')) >> td.details-overview_data"
+//           )
+//           .isVisible())
+//           ? await page
+//               .locator(
+//                 "tr:has(td.details-overview_title:text('Stock #')) >> td.details-overview_data"
+//               )
+//               .textContent()
+//           : "Not Available";
 
-        const carDetails = {
-          car_url: fullURL,
-          carId: uuidv4(),
-          Location,
-          Make: Make.toLowerCase(),
-          Model: Model.toLowerCase(),
-          Trim,
-          Mileage,
-          BodyType,
-          Year,
-          Price,
-          ExteriorColor,
-          InteriorColor,
-          Transmission,
-          Engine,
-          DriveTrain,
-          Doors,
-          Seats,
-          CoverImage,
-          OtherCarImages,
-          Stock_Number,
-          VIN,
-        };
+//         const VIN = (await page
+//           .locator(
+//             "tr:has(td.details-overview_title:text('VIN')) >> td.details-overview_data"
+//           )
+//           .isVisible())
+//           ? await page
+//               .locator(
+//                 "tr:has(td.details-overview_title:text('VIN')) >> td.details-overview_data"
+//               )
+//               .textContent()
+//           : "Not Available";
 
-        console.log(`Car_Number: #${carCounter}`);
-        await sendCarToBubble(carDetails);
-        console.log(carDetails);
-      } catch (error) {
-        console.error(`Error scraping car at ${fullURL}:`, error);
-      }
+//         const Doors = (await page
+//           .locator(
+//             "tr:has(td.details-overview_title:text('Doors')) >> td.details-overview_data"
+//           )
+//           .isVisible())
+//           ? await page
+//               .locator(
+//                 "tr:has(td.details-overview_title:text('Doors')) >> td.details-overview_data"
+//               )
+//               .textContent()
+//           : "Not Available";
 
-      await page.waitForTimeout(5000);
-    }
+//         const Seats = (await page
+//           .locator(
+//             "tr:has(td.details-overview_title:text('Passengers')) >> td.details-overview_data"
+//           )
+//           .isVisible())
+//           ? await page
+//               .locator(
+//                 "tr:has(td.details-overview_title:text('Passengers')) >> td.details-overview_data"
+//               )
+//               .textContent()
+//           : "Not Available";
 
-    // module.exports = {
-    //   startCrawler,
-    // };
+//         const carDetails = {
+//           car_url: fullURL,
+//           carId: uuidv4(),
+//           Location,
+//           Make: Make.toLowerCase(),
+//           Model: Model.toLowerCase(),
+//           Trim,
+//           Mileage,
+//           BodyType,
+//           Year,
+//           Price,
+//           ExteriorColor,
+//           InteriorColor,
+//           Transmission,
+//           Engine,
+//           DriveTrain,
+//           Doors,
+//           Seats,
+//           CoverImage,
+//           OtherCarImages,
+//           Stock_Number,
+//           VIN,
+//         };
 
-    startCrawler();
+//         console.log(`Car_Number: #${carCounter}`);
+//         await sendCarToBubble(carDetails);
+//         console.log(carDetails);
+//       } catch (error) {
+//         console.error(`Error scraping car at ${fullURL}:`, error);
+//       }
 
-    //   const nextButtonSelector = "li.next a.thm-light_text_color";
-    //   const nextButton = await page.$(nextButtonSelector);
+//       await page.waitForTimeout(5000);
+//     }
 
-    //   if (nextButton) {
-    //     try {
-    //       console.log(`Navigating to page ${pageNumber + 1}...`);
-    //       const isNextButtonVisible = await page.isVisible(nextButtonSelector);
-    //       const isDisabled = await page.$eval(
-    //         nextButtonSelector,
-    //         (btn) => btn.disabled
-    //       );
-    //       if (!isNextButtonVisible || isDisabled) {
-    //         console.log("No more pages to navigate.");
-    //         hasNextPage = false;
-    //       } else {
-    //         await Promise.all([
-    //           page.click(nextButtonSelector),
-    //           page.waitForURL(/search\.html/, { waitUntil: "domcontentloaded" }),
-    //         ]);
-    //         pageNumber++;
-    //       }
-    //     } catch (error) {
-    //       console.error(`Error navigating to page ${pageNumber + 1}:`, error);
-    //       hasNextPage = false;
-    //     }
-    //   } else {
-    //     console.log("No more pages to navigate.");
-    //     hasNextPage = false;
-    //   }
-  }
-}
+//     // module.exports = {
+//     //   startCrawler,
+//     // };
+
+//     startCrawler();
+
+//     //   const nextButtonSelector = "li.next a.thm-light_text_color";
+//     //   const nextButton = await page.$(nextButtonSelector);
+
+//     //   if (nextButton) {
+//     //     try {
+//     //       console.log(`Navigating to page ${pageNumber + 1}...`);
+//     //       const isNextButtonVisible = await page.isVisible(nextButtonSelector);
+//     //       const isDisabled = await page.$eval(
+//     //         nextButtonSelector,
+//     //         (btn) => btn.disabled
+//     //       );
+//     //       if (!isNextButtonVisible || isDisabled) {
+//     //         console.log("No more pages to navigate.");
+//     //         hasNextPage = false;
+//     //       } else {
+//     //         await Promise.all([
+//     //           page.click(nextButtonSelector),
+//     //           page.waitForURL(/search\.html/, { waitUntil: "domcontentloaded" }),
+//     //         ]);
+//     //         pageNumber++;
+//     //       }
+//     //     } catch (error) {
+//     //       console.error(`Error navigating to page ${pageNumber + 1}:`, error);
+//     //       hasNextPage = false;
+//     //     }
+//     //   } else {
+//     //     console.log("No more pages to navigate.");
+//     //     hasNextPage = false;
+//     //   }
+//   }
+// }

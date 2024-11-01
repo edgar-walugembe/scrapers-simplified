@@ -101,15 +101,32 @@ function getMainBodyType(bodyType) {
 }
 
 async function sendCarToBubble(car) {
-  const url =
+  const baseUrl =
     "https://voxcar-65775.bubbleapps.io/version-test/api/1.1/obj/cars";
+  const queryUrl = `${baseUrl}?constraints=${encodeURIComponent(
+    JSON.stringify([
+      { key: "car_url", constraint_type: "equals", value: car.car_url },
+    ])
+  )}`;
 
   try {
-    const response = await axios.post(url, car, {
+    const checkResponse = await axios.get(queryUrl, {
       headers: {
         Authorization: `Bearer 6af869f6680291881c0d8fbcfa686ff3`,
       },
     });
+
+    if (checkResponse.data.response.results.length > 0) {
+      console.log(`Car with URL ${car.car_url} is already in the database.`);
+      return;
+    }
+
+    const response = await axios.post(baseUrl, car, {
+      headers: {
+        Authorization: `Bearer 6af869f6680291881c0d8fbcfa686ff3`,
+      },
+    });
+
     console.log("Car successfully added:", response.data);
   } catch (error) {
     console.error("Error adding car:", error.response?.data || error.message);
