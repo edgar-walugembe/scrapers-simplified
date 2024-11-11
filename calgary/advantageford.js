@@ -155,17 +155,10 @@ async function autoScroll(page) {
 async function startCrawler() {
   const browser = await playwright.chromium.launch({
     headless: true,
-<<<<<<< Updated upstream
     // ignoreHTTPSErrors: true,
     // proxy: {
     //   server: "154.16.146.42:80",
     // },
-=======
-    // proxy:{
-    //   server:'154.16.146.42:80'
-    // },
-    
->>>>>>> Stashed changes
   });
 
   const page = await browser.newPage();
