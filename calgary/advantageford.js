@@ -129,7 +129,7 @@ async function sendCarToBubble(car) {
 
     console.log("Car successfully added:", response.data);
   } catch (error) {
-    console.error("Error adding car:", error.response?.data || error.message);
+    console.message(error.message);
   }
 }
 
@@ -155,10 +155,17 @@ async function autoScroll(page) {
 async function startCrawler() {
   const browser = await playwright.chromium.launch({
     headless: true,
+<<<<<<< Updated upstream
     // ignoreHTTPSErrors: true,
     // proxy: {
     //   server: "154.16.146.42:80",
     // },
+=======
+    // proxy:{
+    //   server:'154.16.146.42:80'
+    // },
+    
+>>>>>>> Stashed changes
   });
 
   const page = await browser.newPage();
