@@ -92,6 +92,10 @@ const carDetails = {
 // async function startCrawler() {
 //   const browser = await playwright.chromium.launch({
 //     headless: false,
+//     proxy: {
+//       server: `http://proxy.scraperapi.com:8001`,
+//       username: "34b49e077e3cde5d21f75fbac7bfc240",
+//     },
 //   });
 
 //   const page = await browser.newPage();
@@ -510,41 +514,41 @@ const carDetails = {
 
 //       await page.waitForTimeout(5000);
 //     }
-
-//     // module.exports = {
-//     //   startCrawler,
-//     // };
-
-//     startCrawler();
-
-//     //   const nextButtonSelector = "li.next a.thm-light_text_color";
-//     //   const nextButton = await page.$(nextButtonSelector);
-
-//     //   if (nextButton) {
-//     //     try {
-//     //       console.log(`Navigating to page ${pageNumber + 1}...`);
-//     //       const isNextButtonVisible = await page.isVisible(nextButtonSelector);
-//     //       const isDisabled = await page.$eval(
-//     //         nextButtonSelector,
-//     //         (btn) => btn.disabled
-//     //       );
-//     //       if (!isNextButtonVisible || isDisabled) {
-//     //         console.log("No more pages to navigate.");
-//     //         hasNextPage = false;
-//     //       } else {
-//     //         await Promise.all([
-//     //           page.click(nextButtonSelector),
-//     //           page.waitForURL(/search\.html/, { waitUntil: "domcontentloaded" }),
-//     //         ]);
-//     //         pageNumber++;
-//     //       }
-//     //     } catch (error) {
-//     //       console.error(`Error navigating to page ${pageNumber + 1}:`, error);
-//     //       hasNextPage = false;
-//     //     }
-//     //   } else {
-//     //     console.log("No more pages to navigate.");
-//     //     hasNextPage = false;
-//     //   }
 //   }
 // }
+
+// startCrawler();
+
+// // module.exports = {
+// //   startCrawler,
+// // };
+
+// //   const nextButtonSelector = "li.next a.thm-light_text_color";
+// //   const nextButton = await page.$(nextButtonSelector);
+
+// //   if (nextButton) {
+// //     try {
+// //       console.log(`Navigating to page ${pageNumber + 1}...`);
+// //       const isNextButtonVisible = await page.isVisible(nextButtonSelector);
+// //       const isDisabled = await page.$eval(
+// //         nextButtonSelector,
+// //         (btn) => btn.disabled
+// //       );
+// //       if (!isNextButtonVisible || isDisabled) {
+// //         console.log("No more pages to navigate.");
+// //         hasNextPage = false;
+// //       } else {
+// //         await Promise.all([
+// //           page.click(nextButtonSelector),
+// //           page.waitForURL(/search\.html/, { waitUntil: "domcontentloaded" }),
+// //         ]);
+// //         pageNumber++;
+// //       }
+// //     } catch (error) {
+// //       console.error(`Error navigating to page ${pageNumber + 1}:`, error);
+// //       hasNextPage = false;
+// //     }
+// //   } else {
+// //     console.log("No more pages to navigate.");
+// //     hasNextPage = false;
+// //   }

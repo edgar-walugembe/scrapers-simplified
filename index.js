@@ -6,7 +6,15 @@ const rootDir = __dirname;
 
 async function runAllScrapers() {
   try {
-    const excludedFolders = ["node_modules", ".git", ".vscode"];
+    const excludedFolders = [
+      "node_modules",
+      ".git",
+      ".vscode",
+      "views",
+      "public",
+      "routes",
+      "bin",
+    ];
 
     const cityFolders = fs.readdirSync(rootDir).filter((folder) => {
       const folderPath = path.join(rootDir, folder);
@@ -39,16 +47,18 @@ async function runAllScrapers() {
   }
 }
 
-cron.schedule(
-  "*/2 * * * *",
-  async () => {
-    console.log("Running scheduled scrapers...");
-    await runAllScrapers();
-    console.log("Finished running scrapers.");
-  },
-  {
-    timezone: "Africa/Nairobi",
-  }
-);
+runAllScrapers();
 
-console.log("Cron job set up to run every 2 minutes in EAT.");
+// cron.schedule(
+//   "*/40 * * * *",
+//   async () => {
+//     console.log("Running scheduled scrapers...");
+//     await runAllScrapers();
+//     console.log("Finished running scrapers.");
+//   },
+//   {
+//     timezone: "Africa/Nairobi",
+//   }
+// );
+
+// console.log("Cron job set up to run every 40 minutes in EAT.");
