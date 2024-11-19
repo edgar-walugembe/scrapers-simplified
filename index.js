@@ -61,4 +61,4 @@ cron.schedule(
   }
 );
 
-console.log("Cron job set up to run every 40 minutes in EAT.");
+console.log("Cron job set up to run every 5 minutes in EAT.");
