@@ -50,7 +50,7 @@ async function runAllScrapers() {
 // runAllScrapers();
 
 cron.schedule(
-  "*/2 * * * *",
+  "*/20 * * * *",
   async () => {
     console.log("Running scheduled scrapers...");
     await runAllScrapers();
@@ -61,4 +61,4 @@ cron.schedule(
   }
 );
 
-console.log("Cron job set up to run every 2 minutes in EAT.");
+console.log("Cron job set up to run every 40 minutes in EAT.");

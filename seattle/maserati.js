@@ -135,11 +135,12 @@ async function sendCarToBubble(car) {
 
 async function startCrawler() {
   const browser = await playwright.chromium.launch({
-    headless: true,
-    // ignoreHTTPSErrors: true,
-    // proxy: {
-    //   server: "154.16.146.42:80",
-    // },
+    headless: false,
+    proxy: {
+      server: "204.44.109.65:5586",
+      username: "gwiheggj",
+      password: "irq9m6nictiy",
+    },
   });
 
   const page = await browser.newPage();
