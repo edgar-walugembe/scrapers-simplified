@@ -47,18 +47,18 @@ async function runAllScrapers() {
   }
 }
 
-// runAllScrapers();
+runAllScrapers();
 
-cron.schedule(
-  "* * * * *",
-  async () => {
-    console.log("Running scheduled scrapers...");
-    await runAllScrapers();
-    console.log("Finished running scrapers.");
-  },
-  {
-    timezone: "Africa/Nairobi",
-  }
-);
+// cron.schedule(
+//   "0 * * * *",
+//   async () => {
+//     console.log("Running scheduled scrapers...");
+//     await runAllScrapers();
+//     console.log("Finished running scrapers.");
+//   },
+//   {
+//     timezone: "Africa/Nairobi",
+//   }
+// );
 
-console.log("Cron job set up to run every minute in EAT.");
+// console.log("Cron job set up to run every hour in EAT.");
