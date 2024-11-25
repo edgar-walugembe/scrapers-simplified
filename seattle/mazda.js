@@ -59,6 +59,12 @@ async function autoScroll(page) {
 async function startCrawler() {
   const browser = await playwright.chromium.launch({
     headless: false,
+    args: [
+      "--disable-gpu",
+      "--disable-software-rasterizer",
+      "--disable-dev-shm-usage",
+      "--no-sandbox",
+    ],
     proxy: {
       server: "204.44.109.65:5586",
       username: "gwiheggj",
@@ -499,6 +505,7 @@ async function startCrawler() {
       await page.waitForTimeout(5000);
     }
   }
+  await browser.close();
 }
 
 module.exports = {

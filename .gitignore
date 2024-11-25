@@ -8,5 +8,7 @@
 /.vscode
 
 #ignored files 
-/victoria/mazda.js
+/calgary/mazda.js
+
+/.idea
 
