@@ -307,7 +307,7 @@ const startCrawler = async () => {
       };
 
       console.log(`Car_Number: #${carCounter}`);
-      // await sendCarToBubble(carDetails);
+      await sendCarToBubble(carDetails);
       console.log(carDetails);
     } catch (error) {
       console.error(`Error scraping car at ${carLink}:`, error.message);
@@ -320,7 +320,7 @@ const startCrawler = async () => {
   await browser.close();
 };
 
-// module.exports = {
-//   startCrawler,
-// };
-startCrawler();
+module.exports = {
+  startCrawler,
+};
+// startCrawler();
