@@ -1,4 +1,5 @@
 const playwright = require("playwright");
+const randomUseragent = require("random-useragent");
 const { v4: uuidv4 } = require("uuid");
 const axios = require("axios");
 const dotenv = require("dotenv");
@@ -21,11 +22,11 @@ function getMainBodyType(bodyType) {
       "off-road suv",
       "luxury suv",
       "subcompact suv",
+      "sport utility",
+      "sports-utility",
     ],
     coupe: [
       "coupe",
-      "sport utility",
-      "sports-utility",
       "sports coupe",
       "grand tourer",
       "hardtop coupe",
@@ -153,14 +154,10 @@ async function autoScroll(page) {
 }
 
 async function startCrawler() {
+  const userAgent = randomUseragent.getRandom();
+
   const browser = await playwright.chromium.launch({
-    headless: false,
-    args: [
-      "--disable-gpu",
-      "--disable-software-rasterizer",
-      "--disable-dev-shm-usage",
-      "--no-sandbox",
-    ],
+    headless: true,
     proxy: {
       server: "204.44.109.65:5586",
       username: "gwiheggj",
@@ -168,7 +165,10 @@ async function startCrawler() {
     },
   });
 
-  const page = await browser.newPage();
+  const context = await browser.newContext({ userAgent: userAgent });
+  const page = await context.newPage({ bypassCSP: true });
+  await page.setDefaultTimeout(30000);
+  await page.setViewportSize({ width: 1920, height: 1080 });
 
   await page.goto(`https://www.suburbanmotors.com/new/inventory/search.html`, {
     waitUntil: "domcontentloaded",
@@ -336,7 +336,8 @@ async function startCrawler() {
         await sendCarToBubble(carDetails);
         console.log(carDetails);
       } catch (error) {
-        console.error(`Error scraping car at ${carLink}:`, error);
+        console.error(`Error scraping car at ${carLink}:`, error.message);
+        console.error(error.stack);
       }
       await page.waitForTimeout(5000);
     }

@@ -1,4 +1,5 @@
 const playwright = require("playwright");
+const randomUseragent = require("random-useragent");
 const { v4: uuidv4 } = require("uuid");
 const axios = require("axios");
 const dotenv = require("dotenv");
@@ -56,15 +57,12 @@ async function autoScroll(page) {
   });
 }
 
-async function startCrawler() {
+const startCrawler = async () => {
+  console.log(`mazda:seattle started`);
+  const userAgent = randomUseragent.getRandom();
+
   const browser = await playwright.chromium.launch({
-    headless: false,
-    args: [
-      "--disable-gpu",
-      "--disable-software-rasterizer",
-      "--disable-dev-shm-usage",
-      "--no-sandbox",
-    ],
+    headless: true,
     proxy: {
       server: "204.44.109.65:5586",
       username: "gwiheggj",
@@ -72,7 +70,10 @@ async function startCrawler() {
     },
   });
 
-  const page = await browser.newPage();
+  const context = await browser.newContext({ userAgent: userAgent });
+  const page = await context.newPage({ bypassCSP: true });
+  await page.setDefaultTimeout(30000);
+  await page.setViewportSize({ width: 1920, height: 1080 });
 
   await page.goto(`https://www.mazdaofseattle.com/search/new-mazda/?tp=new/`, {
     waitUntil: "domcontentloaded",
@@ -214,6 +215,8 @@ async function startCrawler() {
               "off-road suv",
               "luxury suv",
               "subcompact suv",
+              "sports-utility",
+              "sport utility",
             ],
             coupe: [
               "coupe",
@@ -222,8 +225,6 @@ async function startCrawler() {
               "hardtop coupe",
               "luxury coupe",
               "performance coupe",
-              "sports-utility",
-              "sport utility",
               "sport",
             ],
             truck: [
@@ -499,14 +500,15 @@ async function startCrawler() {
         await sendCarToBubble(carDetails);
         console.log(carDetails);
       } catch (error) {
-        console.error(`Error scraping car at ${fullURL}:`, error);
+        console.error(`Error scraping car at ${carLink}:`, error.message);
+        console.error(error.stack);
       }
 
       await page.waitForTimeout(5000);
     }
   }
   await browser.close();
-}
+};
 
 module.exports = {
   startCrawler,

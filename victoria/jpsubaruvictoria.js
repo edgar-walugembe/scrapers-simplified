@@ -1,4 +1,5 @@
 const playwright = require("playwright");
+const randomUseragent = require("random-useragent");
 const { v4: uuidv4 } = require("uuid");
 const axios = require("axios");
 const dotenv = require("dotenv");
@@ -21,11 +22,11 @@ function getMainBodyType(bodyType) {
       "off-road suv",
       "luxury suv",
       "subcompact suv",
+      "sport utility",
+      "sports-utility",
     ],
     coupe: [
       "coupe",
-      "sport utility",
-      "sports-utility",
       "sports coupe",
       "grand tourer",
       "hardtop coupe",
@@ -151,15 +152,12 @@ async function autoScroll(page) {
   });
 }
 
-async function startCrawler() {
+const startCrawler = async () => {
+  console.log(`jpsubaruvictoria:victoria started`);
+  const userAgent = randomUseragent.getRandom();
+
   const browser = await playwright.chromium.launch({
-    headless: false,
-    args: [
-      "--disable-gpu",
-      "--disable-software-rasterizer",
-      "--disable-dev-shm-usage",
-      "--no-sandbox",
-    ],
+    headless: true,
     proxy: {
       server: "204.44.109.65:5586",
       username: "gwiheggj",
@@ -167,7 +165,10 @@ async function startCrawler() {
     },
   });
 
-  const page = await browser.newPage();
+  const context = await browser.newContext({ userAgent: userAgent });
+  const page = await context.newPage({ bypassCSP: true });
+  await page.setDefaultTimeout(30000);
+  await page.setViewportSize({ width: 1920, height: 1080 });
 
   await page.goto(
     `https://www.jpsubaruvictoria.com/vehicles/new/?view=grid&sc=new`,
@@ -192,179 +193,182 @@ async function startCrawler() {
       reachedEnd = true;
     }
     previousHeight = newHeight;
-  }
 
-  const productSelector = "a.vehicle-card__image-link.gtm_vehicle_title_cta";
-  const carLinks = await page.$$eval(productSelector, (links) =>
-    links.map((link) => link.href)
-  );
+    const productSelector = "a.vehicle-card__image-link.gtm_vehicle_title_cta";
+    const carLinks = await page.$$eval(productSelector, (links) =>
+      links.map((link) => link.href)
+    );
 
-  console.log(`Found ${carLinks.length} car links`);
-  for (const carLink of carLinks) {
-    carCounter++;
+    console.log(`Found ${carLinks.length} car links`);
+    for (const carLink of carLinks) {
+      carCounter++;
 
-    await page.goto(carLink, {
-      waitUntil: "domcontentloaded",
-      timeout: 120000,
-    });
+      await page.goto(carLink, {
+        waitUntil: "domcontentloaded",
+        timeout: 120000,
+      });
 
-    try {
-      function extractYearMakeModel(url) {
-        const path = new URL(url).pathname;
-        const regex =
-          /\/vehicles\/(\d+)\/([a-z-]+)\/([a-z-]+)\/([a-z-]+)\/([a-z]+)\/\d+\//i;
-        const match = path.match(regex);
+      try {
+        function extractYearMakeModel(url) {
+          const path = new URL(url).pathname;
+          const regex =
+            /\/vehicles\/(\d+)\/([a-z-]+)\/([a-z-]+)\/([a-z-]+)\/([a-z]+)\/\d+\//i;
+          const match = path.match(regex);
 
-        if (match) {
-          const Year = match[1];
-          const Make = match[2];
-          const Model = match[3];
+          if (match) {
+            const Year = match[1];
+            const Make = match[2];
+            const Model = match[3];
 
-          return { Year, Make, Model };
-        } else {
-          return null;
-        }
-      }
-      const { Year, Make, Model } = extractYearMakeModel(carLink) || {};
-
-      const Location = "Victoria";
-
-      const Price = (await page.isVisible(".price-block__price--xl span.df"))
-        ? await page.locator(".price-block__price--xl span.df").textContent()
-        : "Not Available";
-
-      const Mileage = (await page.isVisible(".col[data-spec='odometer'] p"))
-        ? await page.locator(".col[data-spec='odometer'] p").textContent()
-        : "Not Available";
-
-      const Trim = (await page.isVisible("a.vdp-breadcrumbs__disabled"))
-        ? await page.locator("a.vdp-breadcrumbs__disabled").textContent()
-        : "Not Available";
-
-      let BodyType = (await page.isVisible(".col[data-spec='body_style'] p"))
-        ? await page.locator(".col[data-spec='body_style'] p").textContent()
-        : "Not Available";
-
-      BodyType = getMainBodyType(BodyType);
-
-      const Engine = (await page.isVisible(".col[data-spec='engine'] p"))
-        ? await page.locator(".col[data-spec='engine'] p").textContent()
-        : "Not Available";
-
-      const DriveTrain = (await page.isVisible(
-        ".col[data-spec='drive_train'] p"
-      ))
-        ? await page.locator(".col[data-spec='drive_train'] p").textContent()
-        : "Not Available";
-
-      const Transmission = (await page.isVisible(
-        ".col[data-spec='transmission'] p"
-      ))
-        ? await page.locator(".col[data-spec='transmission'] p").textContent()
-        : "Not Available";
-
-      const FuelType = (await page.isVisible(".col[data-spec='fuel_type'] p"))
-        ? await page.locator(".col[data-spec='fuel_type'] p").textContent()
-        : "Not Available";
-
-      let VIN = (await page.isVisible(
-        "span.overview-group__item:nth-of-type(2)"
-      ))
-        ? await page
-            .locator("span.overview-group__item:nth-of-type(2)")
-            .textContent()
-        : "Not Available";
-
-      let Stock_Number = (await page.isVisible(
-        "	span.overview-group__item:nth-of-type(1)"
-      ))
-        ? await page
-            .locator("	span.overview-group__item:nth-of-type(1)")
-            .textContent()
-        : "Not Available";
-
-      VIN = VIN.includes("VIN:") ? VIN.replace("VIN:", "").trim() : VIN;
-      Stock_Number = Stock_Number.includes("Stock #:")
-        ? Stock_Number.replace("Stock #:", "").trim()
-        : Stock_Number;
-
-      const ExteriorColor = (await page.isVisible(
-        ".col[data-spec='manu_exterior_color'] p"
-      ))
-        ? await page
-            .locator(".col[data-spec='manu_exterior_color'] p")
-            .textContent()
-        : "Not Available";
-
-      const InteriorColor = (await page.isVisible(
-        ".col[data-spec='interior_color'] p"
-      ))
-        ? await page.locator(".col[data-spec='interior_color'] p").textContent()
-        : "Not Available";
-
-      const isViewImagesButtonVisible = await page.isVisible(
-        "div.photo-gallery__buttons-container.photo-gallery__buttons-container--right"
-      );
-      let OtherCarImages = [];
-      if (isViewImagesButtonVisible) {
-        try {
-          await page.click(
-            "div.photo-gallery__buttons-container.photo-gallery__buttons-container--right"
-          );
-          await page.waitForTimeout(3000);
-          if (await page.isVisible("img.vgs__gallery__container__img")) {
-            await page.waitForSelector("img.vgs__gallery__container__img");
-            OtherCarImages = await page.$$eval(
-              "img.vgs__gallery__container__img",
-              (imgs) => imgs.map((img) => img.src)
-            );
+            return { Year, Make, Model };
+          } else {
+            return null;
           }
-        } catch (error) {
-          console.log("Error fetching additional images:", error);
         }
-      } else {
-        console.log(`ViewImages  button absent for car at: ${carLink}`);
+        const { Year, Make, Model } = extractYearMakeModel(carLink) || {};
+
+        const Location = "Victoria";
+
+        const Price = (await page.isVisible(".price-block__price--xl span.df"))
+          ? await page.locator(".price-block__price--xl span.df").textContent()
+          : "Not Available";
+
+        const Mileage = (await page.isVisible(".col[data-spec='odometer'] p"))
+          ? await page.locator(".col[data-spec='odometer'] p").textContent()
+          : "Not Available";
+
+        const Trim = (await page.isVisible("a.vdp-breadcrumbs__disabled"))
+          ? await page.locator("a.vdp-breadcrumbs__disabled").textContent()
+          : "Not Available";
+
+        let BodyType = (await page.isVisible(".col[data-spec='body_style'] p"))
+          ? await page.locator(".col[data-spec='body_style'] p").textContent()
+          : "Not Available";
+
+        BodyType = getMainBodyType(BodyType);
+
+        const Engine = (await page.isVisible(".col[data-spec='engine'] p"))
+          ? await page.locator(".col[data-spec='engine'] p").textContent()
+          : "Not Available";
+
+        const DriveTrain = (await page.isVisible(
+          ".col[data-spec='drive_train'] p"
+        ))
+          ? await page.locator(".col[data-spec='drive_train'] p").textContent()
+          : "Not Available";
+
+        const Transmission = (await page.isVisible(
+          ".col[data-spec='transmission'] p"
+        ))
+          ? await page.locator(".col[data-spec='transmission'] p").textContent()
+          : "Not Available";
+
+        const FuelType = (await page.isVisible(".col[data-spec='fuel_type'] p"))
+          ? await page.locator(".col[data-spec='fuel_type'] p").textContent()
+          : "Not Available";
+
+        let VIN = (await page.isVisible(
+          "span.overview-group__item:nth-of-type(2)"
+        ))
+          ? await page
+              .locator("span.overview-group__item:nth-of-type(2)")
+              .textContent()
+          : "Not Available";
+
+        let Stock_Number = (await page.isVisible(
+          "	span.overview-group__item:nth-of-type(1)"
+        ))
+          ? await page
+              .locator("	span.overview-group__item:nth-of-type(1)")
+              .textContent()
+          : "Not Available";
+
+        VIN = VIN.includes("VIN:") ? VIN.replace("VIN:", "").trim() : VIN;
+        Stock_Number = Stock_Number.includes("Stock #:")
+          ? Stock_Number.replace("Stock #:", "").trim()
+          : Stock_Number;
+
+        const ExteriorColor = (await page.isVisible(
+          ".col[data-spec='manu_exterior_color'] p"
+        ))
+          ? await page
+              .locator(".col[data-spec='manu_exterior_color'] p")
+              .textContent()
+          : "Not Available";
+
+        const InteriorColor = (await page.isVisible(
+          ".col[data-spec='interior_color'] p"
+        ))
+          ? await page
+              .locator(".col[data-spec='interior_color'] p")
+              .textContent()
+          : "Not Available";
+
+        const isViewImagesButtonVisible = await page.isVisible(
+          "div.photo-gallery__buttons-container.photo-gallery__buttons-container--right"
+        );
+        let OtherCarImages = [];
+        if (isViewImagesButtonVisible) {
+          try {
+            await page.click(
+              "div.photo-gallery__buttons-container.photo-gallery__buttons-container--right"
+            );
+            await page.waitForTimeout(3000);
+            if (await page.isVisible("img.vgs__gallery__container__img")) {
+              await page.waitForSelector("img.vgs__gallery__container__img");
+              OtherCarImages = await page.$$eval(
+                "img.vgs__gallery__container__img",
+                (imgs) => imgs.map((img) => img.src)
+              );
+            }
+          } catch (error) {
+            console.log("Error fetching additional images:", error);
+          }
+        } else {
+          console.log(`ViewImages  button absent for car at: ${carLink}`);
+        }
+
+        const CoverImage =
+          OtherCarImages[0] ||
+          "https://www.jpsubarunorthshore.com/wp-content/themes/convertus-achilles/achilles/assets/images/srp-placeholder/PV.jpg";
+
+        const carDetails = {
+          car_url: carLink,
+          carId: uuidv4(),
+          Location,
+          Make: Make ? Make.toLowerCase() : "Not Available",
+          Model: Model ? Model.toLowerCase() : "Not Available",
+          Trim: Trim.toLowerCase(),
+          BodyType: BodyType || "Not Available",
+          Mileage,
+          Year: Year || "Not Available",
+          Price,
+          ExteriorColor,
+          InteriorColor,
+          Transmission,
+          FuelType,
+          DriveTrain,
+          Engine,
+          CoverImage,
+          OtherCarImages,
+          VIN: VIN || "Not Available",
+          Stock_Number: Stock_Number || "Not Available",
+        };
+
+        console.log(`Car_Number: #${carCounter}`);
+        await sendCarToBubble(carDetails);
+        console.log(carDetails);
+      } catch (error) {
+        console.error(`Error scraping car at ${carLink}:`, error.message);
+        console.error(error.stack);
       }
 
-      const CoverImage =
-        OtherCarImages[0] ||
-        "https://www.jpsubarunorthshore.com/wp-content/themes/convertus-achilles/achilles/assets/images/srp-placeholder/PV.jpg";
-
-      const carDetails = {
-        car_url: carLink,
-        carId: uuidv4(),
-        Location,
-        Make: Make ? Make.toLowerCase() : "Not Available",
-        Model: Model ? Model.toLowerCase() : "Not Available",
-        Trim: Trim.toLowerCase(),
-        BodyType: BodyType || "Not Available",
-        Mileage,
-        Year: Year || "Not Available",
-        Price,
-        ExteriorColor,
-        InteriorColor,
-        Transmission,
-        FuelType,
-        DriveTrain,
-        Engine,
-        CoverImage,
-        OtherCarImages,
-        VIN: VIN || "Not Available",
-        Stock_Number: Stock_Number || "Not Available",
-      };
-
-      console.log(`Car_Number: #${carCounter}`);
-      await sendCarToBubble(carDetails);
-      console.log(carDetails);
-    } catch (error) {
-      console.error(`Error scraping car at ${carLink}:`, error);
+      await page.waitForTimeout(5000);
     }
-
-    await page.waitForTimeout(5000);
   }
 
   await browser.close();
-}
+};
 
 module.exports = {
   startCrawler,

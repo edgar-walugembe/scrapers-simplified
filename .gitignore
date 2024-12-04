@@ -9,6 +9,24 @@
 
 #ignored files 
 /calgary/mazda.js
+/calgary/audi.js
+/calgary/bmw.js
+/calgary/mercedes-benz.js
+
+/seattle/audi.js
+/seattle/bmw.js
+/seattle/mercedes-benz.js
+
+/vancouver/audi.js
+/vancouver/bmw.js
+/vancouver/mercedes-benz.js
+
+/victoria/audi.js
+/victoria/bmw.js
+/victoria/mazda.js
+/victoria/mercedes-benz.js
+
+
 
 /.idea
 

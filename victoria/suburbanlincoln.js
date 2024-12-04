@@ -1,4 +1,5 @@
 const playwright = require("playwright");
+const randomUseragent = require("random-useragent");
 const { v4: uuidv4 } = require("uuid");
 const axios = require("axios");
 const dotenv = require("dotenv");
@@ -21,11 +22,11 @@ function getMainBodyType(bodyType) {
       "off-road suv",
       "luxury suv",
       "subcompact suv",
+      "sport utility",
+      "sports-utility",
     ],
     coupe: [
       "coupe",
-      "sport utility",
-      "sports-utility",
       "sports coupe",
       "grand tourer",
       "hardtop coupe",
@@ -152,15 +153,12 @@ async function autoScroll(page) {
   });
 }
 
-async function startCrawler() {
+const startCrawler = async () => {
+  console.log(`suburbanlincoln:victoria started`);
+  const userAgent = randomUseragent.getRandom();
+
   const browser = await playwright.chromium.launch({
-    headless: false,
-    args: [
-      "--disable-gpu",
-      "--disable-software-rasterizer",
-      "--disable-dev-shm-usage",
-      "--no-sandbox",
-    ],
+    headless: true,
     proxy: {
       server: "204.44.109.65:5586",
       username: "gwiheggj",
@@ -168,7 +166,10 @@ async function startCrawler() {
     },
   });
 
-  const page = await browser.newPage();
+  const context = await browser.newContext({ userAgent: userAgent });
+  const page = await context.newPage({ bypassCSP: true });
+  await page.setDefaultTimeout(30000);
+  await page.setViewportSize({ width: 1920, height: 1080 });
 
   await page.goto(`https://www.suburbanlincoln.ca/new/inventory/search.html`, {
     waitUntil: "domcontentloaded",
@@ -193,221 +194,224 @@ async function startCrawler() {
         reachedEnd = true;
       }
       previousHeight = newHeight;
-    }
 
-    const productSelector = "div.carImage > a";
-    const carLinks = await page.$$eval(productSelector, (links) =>
-      links.map((link) => link.href)
-    );
+      const productSelector = "div.carImage > a";
+      const carLinks = await page.$$eval(productSelector, (links) =>
+        links.map((link) => link.href)
+      );
 
-    console.log(`Page ${pageNumber}: Found ${carLinks.length} car links`);
-    for (const carLink of carLinks) {
-      carCounter++;
+      console.log(`Page ${pageNumber}: Found ${carLinks.length} car links`);
+      for (const carLink of carLinks) {
+        carCounter++;
 
-      await page.goto(carLink, {
-        waitUntil: "domcontentloaded",
-        timeout: 60000,
-      });
+        await page.goto(carLink, {
+          waitUntil: "domcontentloaded",
+          timeout: 60000,
+        });
 
-      try {
-        function extractCarDetails(url) {
-          const urlPart = url.split("/").pop();
-          const urlSegments = urlPart.split("-");
+        try {
+          function extractCarDetails(url) {
+            const urlPart = url.split("/").pop();
+            const urlSegments = urlPart.split("-");
 
-          const year = urlSegments[0];
-          const make = urlSegments[1];
-          const model = urlSegments[2].replace(/_/g, " ");
-          return { year, make, model };
-        }
+            const year = urlSegments[0];
+            const make = urlSegments[1];
+            const model = urlSegments[2].replace(/_/g, " ");
+            return { year, make, model };
+          }
 
-        const { year, make, model } = extractCarDetails(carLink) || {};
+          const { year, make, model } = extractCarDetails(carLink) || {};
 
-        const Year = year || "Year Not Found";
-        const Make = make || "Make Not Found";
-        const Model = model || "Model Not Found";
+          const Year = year || "Year Not Found";
+          const Make = make || "Make Not Found";
+          const Model = model || "Model Not Found";
 
-        const Location = "Victoria";
+          const Location = "Victoria";
 
-        let Price = (await page.isVisible("span#specsPrice"))
-          ? await page.locator("span#specsPrice").textContent()
-          : "Not Available";
-        Price = Price.includes("Price:")
-          ? Price.replace("Price:", "").trim()
-          : Price;
+          let Price = (await page.isVisible("span#specsPrice"))
+            ? await page.locator("span#specsPrice").textContent()
+            : "Not Available";
+          Price = Price.includes("Price:")
+            ? Price.replace("Price:", "").trim()
+            : Price;
 
-        let Trim = (await page.isVisible("span#specsVersion"))
-          ? await page.locator("span#specsVersion").textContent()
-          : "Not Available";
-        Trim = Trim.includes("Trim Level:")
-          ? Trim.replace("Trim Level:", "").trim()
-          : Trim;
+          let Trim = (await page.isVisible("span#specsVersion"))
+            ? await page.locator("span#specsVersion").textContent()
+            : "Not Available";
+          Trim = Trim.includes("Trim Level:")
+            ? Trim.replace("Trim Level:", "").trim()
+            : Trim;
 
-        let BodyType = (await page.isVisible("span#specsBodyType"))
-          ? await page.locator("span#specsBodyType").textContent()
-          : "Not Available";
+          let BodyType = (await page.isVisible("span#specsBodyType"))
+            ? await page.locator("span#specsBodyType").textContent()
+            : "Not Available";
 
-        BodyType = BodyType.includes("Category:")
-          ? BodyType.replace("Category:", "").trim()
-          : BodyType;
-        BodyType = getMainBodyType(BodyType);
+          BodyType = BodyType.includes("Category:")
+            ? BodyType.replace("Category:", "").trim()
+            : BodyType;
+          BodyType = getMainBodyType(BodyType);
 
-        let ExteriorColor = (await page.isVisible("span#specsExtColor"))
-          ? await page.locator("span#specsExtColor").textContent()
-          : "Not Available";
-        ExteriorColor = ExteriorColor.includes("Exterior Color:")
-          ? ExteriorColor.replace("Exterior Color:", "").trim()
-          : ExteriorColor;
+          let ExteriorColor = (await page.isVisible("span#specsExtColor"))
+            ? await page.locator("span#specsExtColor").textContent()
+            : "Not Available";
+          ExteriorColor = ExteriorColor.includes("Exterior Color:")
+            ? ExteriorColor.replace("Exterior Color:", "").trim()
+            : ExteriorColor;
 
-        let Transmission = (await page.isVisible("span#specsTransmission"))
-          ? await page.locator("span#specsTransmission").textContent()
-          : "Not Available";
-        Transmission = Transmission.includes("Transmission:")
-          ? Transmission.replace("Transmission:", "").trim()
-          : Transmission;
+          let Transmission = (await page.isVisible("span#specsTransmission"))
+            ? await page.locator("span#specsTransmission").textContent()
+            : "Not Available";
+          Transmission = Transmission.includes("Transmission:")
+            ? Transmission.replace("Transmission:", "").trim()
+            : Transmission;
 
-        let DriveTrain = (await page.isVisible("span#specsDriveTrain"))
-          ? await page.locator("span#specsDriveTrain").textContent()
-          : "Not Available";
-        DriveTrain = DriveTrain.includes("Drive train:")
-          ? DriveTrain.replace("Drive train:", "").trim()
-          : DriveTrain;
+          let DriveTrain = (await page.isVisible("span#specsDriveTrain"))
+            ? await page.locator("span#specsDriveTrain").textContent()
+            : "Not Available";
+          DriveTrain = DriveTrain.includes("Drive train:")
+            ? DriveTrain.replace("Drive train:", "").trim()
+            : DriveTrain;
 
-        let Mileage = (await page.isVisible("span#specsKM"))
-          ? await page.locator("span#specsKM").textContent()
-          : "Not Available";
-        Mileage = Mileage.includes("Kilometers:")
-          ? Mileage.replace("Kilometers:", "").trim()
-          : Mileage;
+          let Mileage = (await page.isVisible("span#specsKM"))
+            ? await page.locator("span#specsKM").textContent()
+            : "Not Available";
+          Mileage = Mileage.includes("Kilometers:")
+            ? Mileage.replace("Kilometers:", "").trim()
+            : Mileage;
 
-        let Engine = (await page.isVisible(".divSpan7 li:nth-of-type(3)"))
-          ? await page.locator(".divSpan7 li:nth-of-type(3)").textContent()
-          : "Not Available";
-        Engine = Engine.includes("Engine:")
-          ? Engine.replace("Engine:", "").trim()
-          : Engine;
+          let Engine = (await page.isVisible(".divSpan7 li:nth-of-type(3)"))
+            ? await page.locator(".divSpan7 li:nth-of-type(3)").textContent()
+            : "Not Available";
+          Engine = Engine.includes("Engine:")
+            ? Engine.replace("Engine:", "").trim()
+            : Engine;
 
-        let Stock_Number = (await page.isVisible("span#specsNoStock"))
-          ? await page.locator("span#specsNoStock").textContent()
-          : "Not Available";
-        Stock_Number = Stock_Number.includes("Stock #:")
-          ? Stock_Number.replace("Stock #:", "").trim()
-          : Stock_Number;
+          let Stock_Number = (await page.isVisible("span#specsNoStock"))
+            ? await page.locator("span#specsNoStock").textContent()
+            : "Not Available";
+          Stock_Number = Stock_Number.includes("Stock #:")
+            ? Stock_Number.replace("Stock #:", "").trim()
+            : Stock_Number;
 
-        let VIN;
-        if (await page.isVisible(".divSpan5 li:nth-of-type(7)")) {
-          VIN = await page.locator(".divSpan5 li:nth-of-type(7)").textContent();
-        } else if (await page.isVisible("span#specsVin")) {
-          VIN = await page.locator("span#specsVin").textContent();
-        } else {
-          VIN = "Not Available";
-        }
-        VIN = VIN.includes("VIN:") ? VIN.replace("VIN:", "").trim() : VIN;
+          let VIN;
+          if (await page.isVisible(".divSpan5 li:nth-of-type(7)")) {
+            VIN = await page
+              .locator(".divSpan5 li:nth-of-type(7)")
+              .textContent();
+          } else if (await page.isVisible("span#specsVin")) {
+            VIN = await page.locator("span#specsVin").textContent();
+          } else {
+            VIN = "Not Available";
+          }
+          VIN = VIN.includes("VIN:") ? VIN.replace("VIN:", "").trim() : VIN;
 
-        await page.waitForSelector("img.image");
-        const OtherCarImages = await page.$$eval("img.image", (imgs) =>
-          imgs.map((img) => img.src)
-        );
-
-        const CoverImage =
-          OtherCarImages[0] ||
-          "https://www.jpsubarunorthshore.com/wp-content/themes/convertus-achilles/achilles/assets/images/srp-placeholder/PV.jpg";
-
-        const carDetails = {
-          car_url: carLink,
-          carId: uuidv4(),
-          Location,
-          Make: Make.toLowerCase(),
-          Model: Model.toLowerCase(),
-          Trim: Trim.toLowerCase(),
-          BodyType: BodyType.toLowerCase(),
-          Year,
-          Mileage,
-          Price,
-          ExteriorColor,
-          Transmission,
-          DriveTrain,
-          CoverImage,
-          OtherCarImages,
-          Engine,
-          Stock_Number,
-          VIN,
-        };
-        console.log(`Car_Number: #${carCounter}`);
-        await sendCarToBubble(carDetails);
-        console.log(carDetails);
-      } catch (error) {
-        console.error(`Error scraping car at ${carLink}:`, error);
-      }
-      await page.waitForTimeout(5000);
-    }
-
-    const nextButtonSelector = "li[title='up']";
-    const nextButton = await page.$(nextButtonSelector);
-
-    if (nextButton) {
-      try {
-        const isNextButtonVisible = await page.isVisible(nextButtonSelector);
-        if (!isNextButtonVisible) {
-          console.log("Next button is not visible, stopping pagination.");
-          hasNextPage = false;
-        } else {
-          const isDisabled = await page.$eval(
-            nextButtonSelector,
-            (btn) => btn.disabled
+          await page.waitForSelector("img.image");
+          const OtherCarImages = await page.$$eval("img.image", (imgs) =>
+            imgs.map((img) => img.src)
           );
-          if (isDisabled) {
-            console.log("Next button is disabled, stopping pagination.");
+
+          const CoverImage =
+            OtherCarImages[0] ||
+            "https://www.jpsubarunorthshore.com/wp-content/themes/convertus-achilles/achilles/assets/images/srp-placeholder/PV.jpg";
+
+          const carDetails = {
+            car_url: carLink,
+            carId: uuidv4(),
+            Location,
+            Make: Make.toLowerCase(),
+            Model: Model.toLowerCase(),
+            Trim: Trim.toLowerCase(),
+            BodyType: BodyType.toLowerCase(),
+            Year,
+            Mileage,
+            Price,
+            ExteriorColor,
+            Transmission,
+            DriveTrain,
+            CoverImage,
+            OtherCarImages,
+            Engine,
+            Stock_Number,
+            VIN,
+          };
+          console.log(`Car_Number: #${carCounter}`);
+          await sendCarToBubble(carDetails);
+          console.log(carDetails);
+        } catch (error) {
+          console.error(`Error scraping car at ${carLink}:`, error.message);
+          console.error(error.stack);
+        }
+        await page.waitForTimeout(5000);
+      }
+
+      const nextButtonSelector = "li[title='up']";
+      const nextButton = await page.$(nextButtonSelector);
+
+      if (nextButton) {
+        try {
+          const isNextButtonVisible = await page.isVisible(nextButtonSelector);
+          if (!isNextButtonVisible) {
+            console.log("Next button is not visible, stopping pagination.");
             hasNextPage = false;
           } else {
-            console.log(`Navigating to page ${pageNumber + 1}...`);
+            const isDisabled = await page.$eval(
+              nextButtonSelector,
+              (btn) => btn.disabled
+            );
+            if (isDisabled) {
+              console.log("Next button is disabled, stopping pagination.");
+              hasNextPage = false;
+            } else {
+              console.log(`Navigating to page ${pageNumber + 1}...`);
 
-            // Retry logic for navigation
-            let retryCount = 0;
-            let maxRetries = 3;
-            let pageLoaded = false;
+              // Retry logic for navigation
+              let retryCount = 0;
+              let maxRetries = 3;
+              let pageLoaded = false;
 
-            while (retryCount < maxRetries && !pageLoaded) {
-              try {
-                await Promise.all([
-                  page.click(nextButtonSelector),
-                  page.waitForURL(/search\.html/, {
-                    waitUntil: "domcontentloaded",
-                    timeout: 60000,
-                  }),
-                ]);
-                pageLoaded = true;
-                pageNumber++;
-              } catch (error) {
-                retryCount++;
-                console.log(
-                  `Error navigating to page ${pageNumber + 1}: ${
-                    error.message
-                  }. Retrying (${retryCount}/${maxRetries})...`
-                );
-                if (retryCount >= maxRetries) {
-                  console.error(
-                    `Failed to navigate to page ${
-                      pageNumber + 1
-                    } after ${maxRetries} retries.`
+              while (retryCount < maxRetries && !pageLoaded) {
+                try {
+                  await Promise.all([
+                    page.click(nextButtonSelector),
+                    page.waitForURL(/search\.html/, {
+                      waitUntil: "domcontentloaded",
+                      timeout: 60000,
+                    }),
+                  ]);
+                  pageLoaded = true;
+                  pageNumber++;
+                } catch (error) {
+                  retryCount++;
+                  console.log(
+                    `Error navigating to page ${pageNumber + 1}: ${
+                      error.message
+                    }. Retrying (${retryCount}/${maxRetries})...`
                   );
-                  hasNextPage = false;
+                  if (retryCount >= maxRetries) {
+                    console.error(
+                      `Failed to navigate to page ${
+                        pageNumber + 1
+                      } after ${maxRetries} retries.`
+                    );
+                    hasNextPage = false;
+                  }
                 }
               }
             }
           }
+        } catch (error) {
+          console.error(`Error navigating to page ${pageNumber + 1}:`, error);
+          hasNextPage = false;
         }
-      } catch (error) {
-        console.error(`Error navigating to page ${pageNumber + 1}:`, error);
+      } else {
+        console.log("No more pages to navigate.");
         hasNextPage = false;
       }
-    } else {
-      console.log("No more pages to navigate.");
-      hasNextPage = false;
     }
   }
 
   await browser.close();
-}
+};
 
 module.exports = {
   startCrawler,
