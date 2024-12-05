@@ -187,6 +187,7 @@ const startCrawler = async () => {
   let previousHeight = await page.evaluate("document.body.scrollHeight");
   let reachedEnd = false;
   while (!reachedEnd) {
+    console.log(`scrolling started`);
     await autoScroll(page);
     await page.waitForTimeout(2000);
 
@@ -196,6 +197,7 @@ const startCrawler = async () => {
       reachedEnd = true;
     }
     previousHeight = newHeight;
+    console.log(`scrolling end`);
   }
 
   const productSelector = ".item.active > a";
