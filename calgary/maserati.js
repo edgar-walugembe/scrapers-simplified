@@ -154,6 +154,7 @@ async function autoScroll(page) {
 
 const startCrawler = async () => {
   console.log(`maserati:calgary started`);
+
   const userAgent = randomUseragent.getRandom();
 
   const browser = await playwright.chromium.launch({

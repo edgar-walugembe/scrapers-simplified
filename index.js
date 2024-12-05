@@ -32,15 +32,23 @@ async function runAllScrapers() {
         .readdirSync(cityPath)
         .filter((file) => file.endsWith(".js"));
 
-      for (const file of files) {
+      const scrapePromises = files.map(async (file) => {
         try {
           const { startCrawler } = require(path.join(rootDir, city, file));
-          console.log(`Running scraper: ${file} for city: ${city}`);
-          await startCrawler();
+          if (typeof startCrawler !== "function") {
+            throw new Error(
+              `${file} does not export a valid startCrawler function.`
+            );
+          } else {
+            console.log(`Running scraper: ${file} for city: ${city}`);
+            await startCrawler();
+          }
         } catch (error) {
           console.error(`Error running scraper for ${file} in ${city}:`, error);
         }
-      }
+      });
+
+      await Promise.all(scrapePromises);
     }
   } catch (error) {
     console.error("Error running scrapers:", error);
@@ -49,6 +57,7 @@ async function runAllScrapers() {
 
 runAllScrapers();
 
+// Uncomment the cron scheduler if needed:
 // cron.schedule(
 //   "0 * * * *",
 //   async () => {
