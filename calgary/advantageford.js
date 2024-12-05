@@ -199,6 +199,7 @@ const startCrawler = async () => {
   let reachedEnd = false;
 
   while (!reachedEnd) {
+    console.log(`scrolling started`);
     await autoScroll(page);
     await page.waitForTimeout(2000);
 
@@ -208,6 +209,7 @@ const startCrawler = async () => {
       reachedEnd = true;
     }
     previousHeight = newHeight;
+    console.log(`scrolling end`);
 
     const productSelector = "a[data-loc='vehicle details']";
     const carLinks = await page.$$eval(productSelector, (links) =>
@@ -334,7 +336,7 @@ const startCrawler = async () => {
         };
 
         console.log(`Car_Number: #${carCounter}`);
-        await sendCarToBubble(carDetails);
+        // await sendCarToBubble(carDetails);
         console.log(carDetails);
       } catch (error) {
         console.error(`Error scraping car at ${carLink}:`, error.message);
@@ -348,8 +350,8 @@ const startCrawler = async () => {
   await browser.close();
 };
 
-module.exports = {
-  startCrawler,
-};
+// module.exports = {
+//   startCrawler,
+// };
 
-// startCrawler();
+startCrawler();
