@@ -350,8 +350,8 @@ const startCrawler = async () => {
   await browser.close();
 };
 
-// module.exports = {
-//   startCrawler,
-// };
+module.exports = {
+  startCrawler,
+};
 
-startCrawler();
+// startCrawler();
