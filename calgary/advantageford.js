@@ -210,141 +210,137 @@ const startCrawler = async () => {
     }
     previousHeight = newHeight;
     console.log(`scrolling end`);
+  }
 
-    const productSelector = "a[data-loc='vehicle details']";
-    const carLinks = await page.$$eval(productSelector, (links) =>
-      links.map((link) => link.href)
-    );
+  const productSelector = "a[data-loc='vehicle details']";
+  const carLinks = await page.$$eval(productSelector, (links) =>
+    links.map((link) => link.href)
+  );
 
-    console.log(`Found ${carLinks.length} car links`);
-    for (const carLink of carLinks) {
-      carCounter++;
+  console.log(`Found ${carLinks.length} car links`);
+  for (const carLink of carLinks) {
+    carCounter++;
 
-      await page.goto(carLink, {
-        waitUntil: "domcontentloaded",
-        timeout: 120000,
-      });
+    await page.goto(carLink, {
+      waitUntil: "domcontentloaded",
+      timeout: 120000,
+    });
 
-      try {
-        function extractYearMakeModel(url) {
-          const path = new URL(url).pathname;
-          const regex =
-            /\/vehicle\/(\d+)-([a-z]+)-([a-z]+)-([a-z-]+)-id\d+\.htm/i;
-          const match = path.match(regex);
+    try {
+      function extractYearMakeModel(url) {
+        const path = new URL(url).pathname;
+        const regex =
+          /\/vehicle\/(\d+)-([a-z]+)-([a-z]+)-([a-z-]+)-id\d+\.htm/i;
+        const match = path.match(regex);
 
-          if (match) {
-            const Year = match[1];
-            const Make = match[2];
-            const Model = match[3];
-            const Trim = match[4].replace(/-/g, " ");
+        if (match) {
+          const Year = match[1];
+          const Make = match[2];
+          const Model = match[3];
+          const Trim = match[4].replace(/-/g, " ");
 
-            return { Year, Make, Model, Trim };
-          } else {
-            return null;
-          }
+          return { Year, Make, Model, Trim };
+        } else {
+          return null;
         }
-        const { Year, Make, Model, Trim } = extractYearMakeModel(carLink) || {};
-
-        const Location = "Calgary";
-
-        const price = (await page.isVisible("span#final-price"))
-          ? await page.locator("span#final-price").textContent()
-          : "Not Available";
-        const Price = `$${price}`;
-
-        let BodyType = (await page.isVisible("td[itemprop='bodyType']"))
-          ? await page.locator("td[itemprop='bodyType']").textContent()
-          : "Not Available";
-        BodyType = getMainBodyType(BodyType);
-
-        const Engine = (await page.isVisible("td[itemprop='vehicleEngine']"))
-          ? await page.locator("td[itemprop='vehicleEngine']").textContent()
-          : "Not Available";
-
-        const DriveTrain = (await page.isVisible(
-          "div.col-xs-12:nth-of-type(3) tr:nth-of-type(3) td.td-odd"
-        ))
-          ? await page
-              .locator(
-                "div.col-xs-12:nth-of-type(3) tr:nth-of-type(3) td.td-odd"
-              )
-              .textContent()
-          : "Not Available";
-
-        const Transmission = (await page.isVisible(
-          "td[itemprop='vehicleTransmission']"
-        ))
-          ? await page
-              .locator("td[itemprop='vehicleTransmission']")
-              .textContent()
-          : "Not Available";
-
-        const FuelType = (await page.isVisible("td[itemprop='fuelType']"))
-          ? await page.locator("td[itemprop='fuelType']").textContent()
-          : "Not Available";
-
-        const VIN = (await page.isVisible("td[itemprop='productID']"))
-          ? await page.locator("td[itemprop='productID']").textContent()
-          : "Not Available";
-
-        const Stock_Number = (await page.isVisible("td[itemprop='sku']"))
-          ? await page.locator("td[itemprop='sku']").textContent()
-          : "Not Available";
-
-        const ExteriorColor = (await page.isVisible("td[itemprop='color']"))
-          ? await page.locator("td[itemprop='color']").textContent()
-          : "Not Available";
-
-        const InteriorColor = (await page.isVisible(
-          "td[itemprop='vehicleInteriorColor']"
-        ))
-          ? await page
-              .locator("td[itemprop='vehicleInteriorColor']")
-              .textContent()
-          : "Not Available";
-
-        const CoverImage =
-          (await page.locator("img[itemprop='image']").getAttribute("src")) ||
-          "https://www.jpsubarunorthshore.com/wp-content/themes/convertus-achilles/achilles/assets/images/srp-placeholder/PV.jpg";
-
-        let OtherCarImages = [];
-        await page.waitForSelector(".thumb img");
-        OtherCarImages = await page.$$eval(".thumb img", (imgs) =>
-          imgs.map((img) => img.src)
-        );
-
-        const carDetails = {
-          car_url: carLink,
-          carId: uuidv4(),
-          Location,
-          Make: Make ? Make.toLowerCase() : "Not Available",
-          Model: Model ? Model.toLowerCase() : "Not Available",
-          Trim: Trim ? Trim.toLowerCase() : "Not Available",
-          BodyType: BodyType || "Not Available",
-          Year: Year || "Not Available",
-          Price,
-          ExteriorColor,
-          InteriorColor,
-          Transmission,
-          FuelType,
-          DriveTrain,
-          Engine,
-          CoverImage,
-          OtherCarImages,
-          VIN,
-          Stock_Number,
-        };
-
-        console.log(`Car_Number: #${carCounter}`);
-        await sendCarToBubble(carDetails);
-        console.log(carDetails);
-      } catch (error) {
-        console.error(`Error scraping car at ${carLink}:`, error.message);
-        console.error(error.stack);
       }
+      const { Year, Make, Model, Trim } = extractYearMakeModel(carLink) || {};
 
-      await page.waitForTimeout(5000);
+      const Location = "Calgary";
+
+      const price = (await page.isVisible("span#final-price"))
+        ? await page.locator("span#final-price").textContent()
+        : "Not Available";
+      const Price = `$${price}`;
+
+      let BodyType = (await page.isVisible("td[itemprop='bodyType']"))
+        ? await page.locator("td[itemprop='bodyType']").textContent()
+        : "Not Available";
+      BodyType = getMainBodyType(BodyType);
+
+      const Engine = (await page.isVisible("td[itemprop='vehicleEngine']"))
+        ? await page.locator("td[itemprop='vehicleEngine']").textContent()
+        : "Not Available";
+
+      const DriveTrain = (await page.isVisible(
+        "div.col-xs-12:nth-of-type(3) tr:nth-of-type(3) td.td-odd"
+      ))
+        ? await page
+            .locator("div.col-xs-12:nth-of-type(3) tr:nth-of-type(3) td.td-odd")
+            .textContent()
+        : "Not Available";
+
+      const Transmission = (await page.isVisible(
+        "td[itemprop='vehicleTransmission']"
+      ))
+        ? await page.locator("td[itemprop='vehicleTransmission']").textContent()
+        : "Not Available";
+
+      const FuelType = (await page.isVisible("td[itemprop='fuelType']"))
+        ? await page.locator("td[itemprop='fuelType']").textContent()
+        : "Not Available";
+
+      const VIN = (await page.isVisible("td[itemprop='productID']"))
+        ? await page.locator("td[itemprop='productID']").textContent()
+        : "Not Available";
+
+      const Stock_Number = (await page.isVisible("td[itemprop='sku']"))
+        ? await page.locator("td[itemprop='sku']").textContent()
+        : "Not Available";
+
+      const ExteriorColor = (await page.isVisible("td[itemprop='color']"))
+        ? await page.locator("td[itemprop='color']").textContent()
+        : "Not Available";
+
+      const InteriorColor = (await page.isVisible(
+        "td[itemprop='vehicleInteriorColor']"
+      ))
+        ? await page
+            .locator("td[itemprop='vehicleInteriorColor']")
+            .textContent()
+        : "Not Available";
+
+      const CoverImage =
+        (await page.locator("img[itemprop='image']").getAttribute("src")) ||
+        "https://www.jpsubarunorthshore.com/wp-content/themes/convertus-achilles/achilles/assets/images/srp-placeholder/PV.jpg";
+
+      let OtherCarImages = [];
+      await page.waitForSelector(".thumb img");
+      OtherCarImages = await page.$$eval(".thumb img", (imgs) =>
+        imgs.map((img) => img.src)
+      );
+
+      const carDetails = {
+        car_url: carLink,
+        carId: uuidv4(),
+        Location,
+        Make: Make ? Make.toLowerCase() : "Not Available",
+        Model: Model ? Model.toLowerCase() : "Not Available",
+        Trim: Trim ? Trim.toLowerCase() : "Not Available",
+        BodyType: BodyType || "Not Available",
+        Year: Year || "Not Available",
+        Price,
+        ExteriorColor,
+        InteriorColor,
+        Transmission,
+        FuelType,
+        DriveTrain,
+        Engine,
+        CoverImage,
+        OtherCarImages,
+        VIN,
+        Stock_Number,
+      };
+
+      console.log(`Car_Number: #${carCounter}`);
+      await sendCarToBubble(carDetails);
+      console.log(carDetails);
+    } catch (error) {
+      console.error(`Error scraping car at ${carLink}:`, error.message);
+      console.error(error.stack);
     }
+
+    await page.waitForTimeout(5000);
   }
 
   await browser.close();
