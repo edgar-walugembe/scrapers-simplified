@@ -1,6 +1,5 @@
 const fs = require("fs");
 const path = require("path");
-const cron = require("node-cron");
 
 const rootDir = __dirname;
 
@@ -32,7 +31,7 @@ async function runAllScrapers() {
         .readdirSync(cityPath)
         .filter((file) => file.endsWith(".js"));
 
-      const scrapePromises = files.map(async (file) => {
+      for (const file of files) {
         try {
           const { startCrawler } = require(path.join(rootDir, city, file));
           if (typeof startCrawler !== "function") {
@@ -46,9 +45,7 @@ async function runAllScrapers() {
         } catch (error) {
           console.error(`Error running scraper for ${file} in ${city}:`, error);
         }
-      });
-
-      await Promise.all(scrapePromises);
+      }
     }
   } catch (error) {
     console.error("Error running scrapers:", error);
