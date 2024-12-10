@@ -251,8 +251,9 @@ const startCrawler = async () => {
 
         const price = (await page.isVisible("span#final-price"))
           ? await page.locator("span#final-price").textContent()
-          : "Not Available";
-        const Price = `$${price}`;
+          : null;
+
+        const Price = price ? `$${price}` : "Not Available";
 
         let BodyType = (await page.isVisible("td[itemprop='bodyType']"))
           ? await page.locator("td[itemprop='bodyType']").textContent()
