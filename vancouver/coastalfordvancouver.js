@@ -174,10 +174,13 @@ const startCrawler = async () => {
   await page.setDefaultTimeout(30000);
   await page.setViewportSize({ width: 1920, height: 1080 });
 
-  await page.goto(`https://www.pierreford.com/searchnew.aspx?pn=96`, {
-    waitUntil: "domcontentloaded",
-    timeout: 120000,
-  });
+  await page.goto(
+    `https://www.coastalfordvancouver.com/new/inventory/search.html`,
+    {
+      waitUntil: "domcontentloaded",
+      timeout: 120000,
+    }
+  );
 
   let carCounter = 0;
 
@@ -190,7 +193,7 @@ const startCrawler = async () => {
 
     while (!reachedEnd) {
       await autoScroll(page);
-      await page.waitForTimeout(2000);
+      await page.waitForTimeout(60000);
 
       let newHeight = await page.evaluate("document.body.scrollHeight");
       if (newHeight === previousHeight) {
