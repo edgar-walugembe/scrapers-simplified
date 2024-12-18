@@ -32,6 +32,8 @@ RUN npm install
 # Ensure Playwright browsers are installed
 RUN npx playwright install
 
+RUN npm install -g pm2 
+
 # Copy the rest of the application files into the container
 COPY . .
 
@@ -39,4 +41,4 @@ COPY . .
 EXPOSE 3000
 
 # Define the command to run your scraper
-CMD ["node", "index.js"]
+CMD ["pm2", "index.js"]

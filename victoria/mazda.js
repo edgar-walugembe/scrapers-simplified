@@ -130,7 +130,7 @@ async function sendCarToBubble(car) {
 
     console.log("Car successfully added:", response.data);
   } catch (error) {
-    console.message(error.message);
+    console.error("Error adding car:", error.message);
   }
 }
 
@@ -213,7 +213,7 @@ const startCrawler = async () => {
 
       await page.goto(fullURL, {
         waitUntil: "domcontentloaded",
-        timeout: 60000,
+        timeout: 120000,
       });
       await page.waitForURL(fullURL, { timeout: 120000 });
 
@@ -251,15 +251,13 @@ const startCrawler = async () => {
         const Model = model || "Model Not Found";
 
         function extractTrim(text) {
-          const regex = /^(\d{4})\s+([A-Za-z0-9\s-]+)\s+([A-Za-z0-9\s-]+)$/;
+          const regex = /^(\d{4})\s+([\w\s-]+)$/;
           const match = text.match(regex);
 
           if (match) {
-            const trim = match[3].trim();
-            return trim;
-          } else {
-            return { error: "Invalid format" };
+            return match[2].trim();
           }
+          return "Not Available";
         }
 
         const trimExtract = (await page.isVisible("div.makeModelYear"))
@@ -284,6 +282,9 @@ const startCrawler = async () => {
         Price = Price.includes("Price:")
           ? Price.replace("Price:", "").trim()
           : Price;
+        if (Price !== "Not Available" && !Price.startsWith("$")) {
+          Price = `$${Price}`;
+        }
 
         let Mileage = (await page.isVisible("span#specsKM"))
           ? await page.locator("span#specsKM").textContent()
@@ -371,7 +372,7 @@ const startCrawler = async () => {
         };
 
         console.log(`Car_Number: #${carCounter}`);
-        // await sendCarToBubble(carDetails);
+        await sendCarToBubble(carDetails);
         console.log(carDetails);
       } catch (error) {
         console.error(`Error scraping car at ${carLink}:`, error.message);
@@ -385,11 +386,10 @@ const startCrawler = async () => {
   await browser.close();
 };
 
-startCrawler();
-
-// module.exports = {
-//   startCrawler,
-// };
+module.exports = {
+  startCrawler,
+};
+// startCrawler();
 
 //   const nextButtonSelector = "li.next a.thm-light_text_color";
 //   const nextButton = await page.$(nextButtonSelector);

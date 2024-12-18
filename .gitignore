@@ -8,8 +8,6 @@
 /.vscode
 
 #ignored files 
-/calgary/advantageford.js
-/calgary/mazda.js
 /calgary/audi.js
 /calgary/bmw.js
 /calgary/mercedes-benz.js
@@ -22,7 +20,6 @@
 /vancouver/bmw.js
 /vancouver/mercedes-benz.js
 
-/victoria/mazda.js
 /victoria/audi.js
 /victoria/bmw.js
 /victoria/mercedes-benz.js

@@ -1,0 +1,16 @@
+version: "3.8"
+
+services:
+  scraper:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    ports:
+      - "3000:3000"
+    environment:
+      # Add any environment variables your app needs
+      NODE_ENV: production
+    restart: unless-stopped
