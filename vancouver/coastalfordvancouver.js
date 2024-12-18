@@ -131,7 +131,7 @@ async function sendCarToBubble(car) {
 
     console.log("Car successfully added:", response.data);
   } catch (error) {
-    console.message(error.message);
+    console.error("Error adding car:", error.message);
   }
 }
 
