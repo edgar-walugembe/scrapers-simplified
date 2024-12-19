@@ -64,9 +64,9 @@ const startCrawler = async () => {
   const browser = await playwright.chromium.launch({
     headless: true,
     proxy: {
-      server: "204.44.109.65:5586",
-      username: "gwiheggj",
-      password: "irq9m6nictiy",
+      server: "p.webshare.io:80",
+      username: "uiswvtpz-US-rotate",
+      password: "u7ughcrj1rmx",
     },
   });
 

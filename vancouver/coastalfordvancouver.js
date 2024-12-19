@@ -162,9 +162,9 @@ const startCrawler = async () => {
   const browser = await playwright.chromium.launch({
     headless: true,
     proxy: {
-      server: "204.44.109.65:5586",
-      username: "gwiheggj",
-      password: "irq9m6nictiy",
+      server: "p.webshare.io:80",
+      username: "uiswvtpz-US-rotate",
+      password: "u7ughcrj1rmx",
     },
   });
 
@@ -207,7 +207,71 @@ const startCrawler = async () => {
       );
 
       console.log(`Found ${carLinks.length} car links`);
+      for (const carLink of carLinks) {
+        carCounter++;
 
+        await page.goto(carLink, {
+          waitUntil: "domcontentloaded",
+          timeout: 60000,
+        });
+
+        try {
+          function extractCarDetails(url) {
+            const regex = /\/(\d{4})-([\w-]+)-([\w-]+)-id/;
+            const match = url.match(regex);
+
+            if (match) {
+              let [_, year, make, model] = match;
+
+              make = make.replace(/-/g, " ");
+              model = model.replace(/-/g, " ");
+
+              return {
+                year,
+                make,
+                model,
+              };
+            } else {
+              throw new Error("URL does not match the expected pattern.");
+            }
+          }
+          const { year, make, model } = extractCarDetails(carLink);
+
+          const Year = year || "Year Not Found";
+          const Make = make || "Make Not Found";
+          const Model = model || "Model Not Found";
+
+          const Location = "Vancouver";
+
+          const carDetails = {
+            car_url: carLink,
+            carId: uuidv4(),
+            Location,
+            Make: Make.toLowerCase(),
+            Model: Model.toLowerCase(),
+            Trim,
+            BodyType,
+            FuelType,
+            Year,
+            Price,
+            ExteriorColor,
+            InteriorColor,
+            Transmission,
+            Engine,
+            CoverImage,
+            OtherCarImages,
+            Stock_Number,
+            VIN,
+          };
+
+          console.log(`Car_Number: #${carCounter}`);
+          // await sendCarToBubble(carDetails);
+          console.log(carDetails);
+        } catch (error) {
+          console.error(`Error scraping car at ${carLink}:`, error.message);
+          console.error(error.stack);
+        }
+      }
       await page.waitForTimeout(5000);
     }
   }
