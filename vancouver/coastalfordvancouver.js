@@ -243,6 +243,63 @@ const startCrawler = async () => {
 
           const Location = "Vancouver";
 
+          const Price = (await page.isVisible(
+            ".priceDivPrice span.format-price"
+          ))
+            ? await page
+                .locator(".priceDivPrice span.format-price")
+                .textContent()
+            : "Not Available";
+
+          let BodyType = (await page.isVisible("span#specsBodyType"))
+            ? await page.locator("span#specsBodyType").textContent()
+            : "Not Available";
+          BodyType = getMainBodyType(BodyType);
+
+          const Trim = (await page.isVisible("span#specsVersion"))
+            ? await page.locator("span#specsVersion").textContent()
+            : "Not Available";
+
+          const ExteriorColor = (await page.isVisible("span#specsExtColor"))
+            ? (await page.locator("span#specsExtColor").textContent()).trim()
+            : "Not Available";
+
+          const Mileage = (await page.isVisible(".divSpan5 li:nth-of-type(5)"))
+            ? (
+                await page.locator(".divSpan5 li:nth-of-type(5)").textContent()
+              ).trim()
+            : "Not Available";
+
+          const Transmission = (await page.isVisible("span#specsTransmission"))
+            ? await page.locator("span#specsTransmission").textContent()
+            : "Not Available";
+
+          const Stock_Number = (await page.isVisible("span#specsNoStock"))
+            ? await page.locator("span#specsNoStock").textContent()
+            : "Not Available";
+
+          const VIN = (await page.isVisible("	span#specsVin"))
+            ? await page.locator("	span#specsVin").textContent()
+            : "Not Available";
+
+          await page.waitForSelector("ul.slides.grab img.image");
+
+          const OtherCarImages = await page.$$eval(
+            "ul.slides.grab img.image",
+            (imgs) => imgs.map((img) => img.getAttribute("src"))
+          );
+          // const OtherCarImages = await page.$$eval("img.image", (imgs) =>
+          //   imgs.map(
+          //     (img) =>
+          //       img.getAttribute("src") || img.getAttribute("data-imgsrc")
+          //   )
+          // );
+
+          const CoverImage =
+            OtherCarImages.length > 0
+              ? OtherCarImages[0]
+              : "https://www.jpsubarunorthshore.com/wp-content/themes/convertus-achilles/achilles/assets/images/srp-placeholder/PV.jpg";
+
           const carDetails = {
             car_url: carLink,
             carId: uuidv4(),
@@ -251,13 +308,11 @@ const startCrawler = async () => {
             Model: Model.toLowerCase(),
             Trim,
             BodyType,
-            FuelType,
             Year,
             Price,
             ExteriorColor,
-            InteriorColor,
+            Mileage,
             Transmission,
-            Engine,
             CoverImage,
             OtherCarImages,
             Stock_Number,
