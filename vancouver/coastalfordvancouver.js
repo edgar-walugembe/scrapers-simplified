@@ -322,6 +322,7 @@ const startCrawler = async () => {
             Price,
             ExteriorColor,
             Mileage,
+            Mileage,
             Transmission,
             CoverImage,
             OtherCarImages,
