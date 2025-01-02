@@ -245,20 +245,16 @@ const startCrawler = async () => {
 
         try {
           function extractCarDetails(url) {
-            const regex = /\/new-[\w-]+-(\d{4})-([\w-]+)-([\w+]+)/;
+            const regex = /\/new-[\w-]+-(\d{4})-([\w]+)-([\w+]+)/;
             const match = url.match(regex);
 
             if (match) {
               let [_, year, make, model] = match;
 
-              make = make.replace(/-/g, " ");
-              model = model.replace(/[-+]/g, " ");
+              make = make.charAt(0).toUpperCase() + make.slice(1).toLowerCase();
+              model = model.replace(/\+/g, " ");
 
-              return {
-                year,
-                make,
-                model,
-              };
+              return { year, make, model };
             } else {
               throw new Error("URL does not match the expected pattern.");
             }
@@ -270,7 +266,7 @@ const startCrawler = async () => {
           const Make = make || "Make Not Found";
           const Model = model || "Model Not Found";
 
-          const Location = "Vancouver";
+          const Location = "Seattle";
 
           const Price = (await page.isVisible(
             ".beforeLeadSubmission .priceBlockResponsiveDesktop .featuredPrice span.vehiclePricingHighlightAmount"
