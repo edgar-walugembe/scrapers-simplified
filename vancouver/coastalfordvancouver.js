@@ -163,8 +163,8 @@ const startCrawler = async () => {
     headless: true,
     proxy: {
       server: "p.webshare.io:80",
-      username: "uiswvtpz-US-rotate",
-      password: "u7ughcrj1rmx",
+      username: "lkysjenx-US-rotate",
+      password: "7gujfecxc6kl",
     },
   });
 
@@ -212,7 +212,7 @@ const startCrawler = async () => {
 
         await page.goto(carLink, {
           waitUntil: "domcontentloaded",
-          timeout: 60000,
+          timeout: 120000,
         });
 
         try {
@@ -243,72 +243,110 @@ const startCrawler = async () => {
 
           const Location = "Vancouver";
 
-          let Price = (await page.isVisible(".priceDivPrice span.format-price"))
-            ? await page
-                .locator(".priceDivPrice span.format-price")
-                .textContent()
-            : "Not Available";
-          if (Price !== "Not Available" && !Price.startsWith("$")) {
-            Price = `$${Price}`;
+          let Price;
+          if (await page.isVisible(".priceDivPrice span.format-price")) {
+            Price = await page
+              .locator(".priceDivPrice span.format-price")
+              .textContent();
+            Price = Price ? Price.trim() : "Not Available";
+            if (!Price.startsWith("$")) {
+              Price = `$${Price}`;
+            }
+          } else {
+            Price = "Not Available";
           }
 
           let BodyType = (await page.isVisible("span#specsBodyType"))
             ? await page.locator("span#specsBodyType").textContent()
             : "Not Available";
+
+          BodyType = BodyType.includes("Category:")
+            ? BodyType.replace("Category:", "").trim()
+            : BodyType;
           BodyType = getMainBodyType(BodyType);
 
-          const Trim = (await page.isVisible("span#specsVersion"))
+          let Trim = (await page.isVisible("span#specsVersion"))
             ? await page.locator("span#specsVersion").textContent()
             : "Not Available";
+          Trim = Trim.includes("Trim Level:")
+            ? Trim.replace("Trim Level:", "").trim()
+            : Trim;
 
-          const ExteriorColor = (await page.isVisible("span#specsExtColor"))
-            ? (await page.locator("span#specsExtColor").textContent()).trim()
+          let ExteriorColor = (await page.isVisible("span#specsExtColor"))
+            ? await page.locator("span#specsExtColor").textContent()
             : "Not Available";
+          ExteriorColor = ExteriorColor.includes("Exterior Color:")
+            ? ExteriorColor.replace("Exterior Color:", "").trim()
+            : ExteriorColor;
 
-          const Mileage = (await page.isVisible(".divSpan5 li:nth-of-type(5)"))
-            ? (
-                await page.locator(".divSpan5 li:nth-of-type(5)").textContent()
-              ).trim()
+          let InteriorColor = (await page.isVisible("span#specsIntColor"))
+            ? await page.locator("span#specsIntColor").textContent()
             : "Not Available";
+          InteriorColor = ExteriorColor.includes("Interior Color:")
+            ? InteriorColor.replace("Interior Color:", "").trim()
+            : InteriorColor;
 
-          const Transmission = (await page.isVisible("span#specsTransmission"))
+          let Mileage;
+          if (await page.isVisible(".divSpan5 li:nth-of-type(5)")) {
+            Mileage = await page
+              .locator(".divSpan5 li:nth-of-type(5)")
+              .textContent();
+          } else if (await page.isVisible("span#specsKM")) {
+            Mileage = await page.locator("span#specsKM").textContent();
+          } else {
+            Mileage = "Not Available";
+          }
+          Mileage = Mileage.includes("Kilometers:")
+            ? Mileage.replace("Kilometers:", "").trim()
+            : Mileage;
+
+          let Engine = (await page.isVisible("span#specsEngine"))
+            ? await page.locator("span#specsEngine").textContent()
+            : "Not Available";
+          Engine = Engine.includes("Engine:")
+            ? Engine.replace("Engine:", "").trim()
+            : Engine;
+
+          let Transmission = (await page.isVisible("span#specsTransmission"))
             ? await page.locator("span#specsTransmission").textContent()
             : "Not Available";
+          Transmission = Transmission.includes("Transmission:")
+            ? Transmission.replace("Transmission:", "").trim()
+            : Transmission;
 
-          const Stock_Number = (await page.isVisible("span#specsNoStock"))
+          let DriveTrain = (await page.isVisible("span#specsDriveTrain"))
+            ? await page.locator("span#specsDriveTrain").textContent()
+            : "Not Available";
+          DriveTrain = DriveTrain.includes("Drive train:")
+            ? DriveTrain.replace("Drive train:", "").trim()
+            : DriveTrain;
+
+          let Stock_Number = (await page.isVisible("span#specsNoStock"))
             ? await page.locator("span#specsNoStock").textContent()
             : "Not Available";
+          Stock_Number = Stock_Number.includes("Stock #:")
+            ? Stock_Number.replace("Stock #:", "").trim()
+            : Stock_Number;
 
-          const VIN = (await page.isVisible("	span#specsVin"))
-            ? await page.locator("	span#specsVin").textContent()
+          let VIN = (await page.isVisible("span#specsVin"))
+            ? await page.locator("span#specsVin").textContent()
             : "Not Available";
+          VIN = VIN.includes("VIN:") ? VIN.replace("VIN:", "").trim() : VIN;
 
-          await page.waitForSelector("ul.slides.grab img.image");
-
-          // const OtherCarImages = await page.$$eval(
-          //   "ul.slides.grab img.image",
-          //   (imgs) => imgs.map((img) => img.getAttribute("src"))
-          // );
-          // // const OtherCarImages = await page.$$eval("img.image", (imgs) =>
-          // //   imgs.map(
-          // //     (img) =>
-          // //       img.getAttribute("src") || img.getAttribute("data-imgsrc")
-          // //   )
-          // // );
-
-          // const CoverImage =
-          //   OtherCarImages.length > 0
-          //     ? OtherCarImages[0]
-          //     : "https://www.jpsubarunorthshore.com/wp-content/themes/convertus-achilles/achilles/assets/images/srp-placeholder/PV.jpg";
-
-          await page.waitForSelector("img.image");
-          const OtherCarImages = await page.$$eval("img.image", (imgs) =>
-            imgs.map((img) => img.src)
+          // await page.waitForSelector("ul.slides.grab li.slide a img.image");
+          const OtherCarImages = await page.$$eval(
+            "ul.slides.grab li.slide a img.image",
+            (imgs) =>
+              imgs.map(
+                (img) =>
+                  img.getAttribute("src") || img.getAttribute("data-imgsrc")
+              )
           );
 
           const CoverImage =
-            OtherCarImages[0] ||
-            "https://www.jpsubarunorthshore.com/wp-content/themes/convertus-achilles/achilles/assets/images/srp-placeholder/PV.jpg";
+            OtherCarImages.length > 0
+              ? OtherCarImages[0]
+              : "https://i.tribune.com.pk/media/images/1446862-carsilhouette-1498801914/1446862-carsilhouette-1498801914.jpg";
 
           const carDetails = {
             car_url: carLink,
@@ -321,9 +359,11 @@ const startCrawler = async () => {
             Year,
             Price,
             ExteriorColor,
-            Mileage,
+            InteriorColor,
             Mileage,
             Transmission,
+            DriveTrain,
+            Engine,
             CoverImage,
             OtherCarImages,
             Stock_Number,
@@ -331,7 +371,7 @@ const startCrawler = async () => {
           };
 
           console.log(`Car_Number: #${carCounter}`);
-          // await sendCarToBubble(carDetails);
+          await sendCarToBubble(carDetails);
           console.log(carDetails);
         } catch (error) {
           console.error(`Error scraping car at ${carLink}:`, error.message);
@@ -345,8 +385,8 @@ const startCrawler = async () => {
   await browser.close();
 };
 
-// module.exports = {
-//   startCrawler,
-// };
+module.exports = {
+  startCrawler,
+};
 
-startCrawler();
+// startCrawler();

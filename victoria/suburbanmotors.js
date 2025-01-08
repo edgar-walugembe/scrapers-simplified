@@ -310,7 +310,7 @@ async function startCrawler() {
 
         const CoverImage =
           OtherCarImages[0] ||
-          "https://www.jpsubarunorthshore.com/wp-content/themes/convertus-achilles/achilles/assets/images/srp-placeholder/PV.jpg";
+          "https://i.tribune.com.pk/media/images/1446862-carsilhouette-1498801914/1446862-carsilhouette-1498801914.jpg";
 
         const carDetails = {
           car_url: carLink,

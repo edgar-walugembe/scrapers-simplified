@@ -195,7 +195,7 @@ const startCrawler = async () => {
 
       const CoverImage =
         (await page.locator("img[itemprop='image']").getAttribute("src")) ||
-        "https://www.jpsubarunorthshore.com/wp-content/themes/convertus-achilles/achilles/assets/images/srp-placeholder/PV.jpg";
+        "https://i.tribune.com.pk/media/images/1446862-carsilhouette-1498801914/1446862-carsilhouette-1498801914.jpg";
 
       await page.waitForSelector(".thumb img");
       const OtherCarImages = await page.$$eval(".thumb img", (imgs) =>

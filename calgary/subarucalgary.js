@@ -130,7 +130,7 @@ const startCrawler = async () => {
           (await page
             .locator("div.photo-gallery__main > img")
             .getAttribute("src")) ||
-          "https://www.jpsubarunorthshore.com/wp-content/themes/convertus-achilles/achilles/assets/images/srp-placeholder/PV.jpg";
+          "https://i.tribune.com.pk/media/images/1446862-carsilhouette-1498801914/1446862-carsilhouette-1498801914.jpg";
 
         const isZoomIconVisible = await page.isVisible(
           "i.photo-gallery__zoom-icon"
