@@ -113,7 +113,7 @@ async function sendCarToBubble(car) {
   try {
     const checkResponse = await axios.get(queryUrl, {
       headers: {
-        Authorization: `Bearer 6af869f6680291881c0d8fbcfa686ff3`,
+        Authorization: `Bearer c4c07d395bea869723bc9c530c4ea849`,
       },
     });
 
