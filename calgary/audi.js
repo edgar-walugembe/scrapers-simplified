@@ -238,6 +238,14 @@ const startCrawler = async () => {
           ? await page.locator("span.price-value").textContent()
           : "Not Available";
 
+        const TrimExtract = (await page.isVisible("span.ddc-font-size-jumbo"))
+          ? await page.locator("span.ddc-font-size-jumbo").textContent()
+          : "Not Available";
+        const Trim = TrimExtract?.replace(
+          new RegExp(`\\b${model}\\b`, "i"),
+          ""
+        ).trim();
+
         function extractBodyTypeAndSeats(combinedData) {
           if (combinedData && combinedData !== "Not Available") {
             const [bodyType, seatsWithText] = combinedData.split("/");
@@ -359,6 +367,7 @@ const startCrawler = async () => {
           Make: Make ? Make.toLowerCase() : "Not Available",
           Model: Model ? Model.toLowerCase() : "Not Available",
           Year: Year || "Not Available",
+          Trim,
           Price,
           BodyType: BodyType || "Not Available",
           ExteriorColor,
@@ -366,7 +375,6 @@ const startCrawler = async () => {
           Transmission,
           Engine,
           DriveTrain,
-          //   Trim: Trim ? Trim.toLowerCase() : "Not Available",
           Seats,
           VIN,
           Stock_Number,
