@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "postinstall": "npx playwright install chromium",
+    "postinstall": "npx playwright install",
     "start": "node ./index.js"
   },
   "dependencies": {
