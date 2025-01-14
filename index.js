@@ -5,6 +5,7 @@ const rootDir = __dirname;
 
 async function runAllScrapers() {
   try {
+    console.log("starting scrappers")
     const excludedFolders = [
       "node_modules",
       ".git",
